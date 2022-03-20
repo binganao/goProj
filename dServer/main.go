@@ -1,40 +1,86 @@
 package main
 
-import "fmt"
-
 /*
 cw.htm -> :8080 -> unreceived danmu / command
                           ^-ch- formatter <- blive <- bilibili
 */
+import (
+	"fmt"
+	"time"
+)
 
-type danmu struct {
-	contents []string
-	i        int
+type RoomStatus struct {
+	purse     int
+	superchat []struct {
+		expire  time.Time
+		price   int
+		content string
+	}
 }
 
-var purse int
+var history []string
+var rooms map[string]*RoomStatus
+var serverStatus struct {
+	unread  int
+	i       int
+	room    string
+	pop     int
+	status  int
+	clients []map[string]struct {
+		first    string
+		interval int
+		last     string
+		path     []string
+		reads    int
+		kick     string
+		platform string
+		browser  string
+	}
+}
+
+func addDanmu(s string) {
+	history = append(history, s)
+	if len(history) > 2e4 {
+		history = history[2000:]
+		serverStatus.i -= 2000
+		if serverStatus.i < 0 {
+			serverStatus.i = 0
+		}
+	}
+	fmt.Println(s)
+}
+
+func handleDanmuEvent(c DanmuEvent) {
+	switch c.event {
+	case EventDanmu:
+		addDanmu(c.content)
+	case EventGuard:
+		fallthrough
+	case EventGift:
+		rooms[serverStatus.room].purse += c.price
+		addDanmu(c.content)
+		//case EventSuperchat:
+	}
+}
 
 func main() {
-	ch := make(chan string)
-	price := make(chan int)
-	sc := make(chan schat)
-	var d danmu
-	HtmlFormatter("545068", ch, price, sc)
+	statusContent := []string{
+		"",
+		"[SLEEP] no room (CAREFUL with s4f_: cmd)",
+		"[SLEEP] & [STUCK] at que.qsize() > 5000",
+		"[SLEEP] & [RESTART] pong<-",
+		"[UPGRADE] it depends on network",
+	}
+	fmt.Println(serverStatus, statusContent[serverStatus.status])
+
+	serverStatus.room = "545068"
+	rooms[serverStatus.room] = &RoomStatus{}
+	ch := make(chan DanmuEvent)
+	StartBlive(serverStatus.room, ch, HTML)
 	for {
 		select {
-		case s := <-ch:
-			d.contents = append(d.contents, s)
-			if len(d.contents) > 2e4 {
-				d.contents = d.contents[2000:]
-				d.i -= 2000
-				if d.i < 0 {
-					d.i = 0
-				}
-			}
-			fmt.Println(s)
-		case p := <-price:
-			purse += p
-			fmt.Println(purse)
+		case c := <-ch:
+			handleDanmuEvent(c)
 		}
 	}
 }

@@ -10,6 +10,19 @@ import (
 	"github.com/Akegarasu/blivedm-go/message"
 )
 
+type DanmuEvent struct {
+	event   int
+	price   int
+	content string
+}
+
+const (
+	EventDanmu int = iota
+	EventSuperchat
+	EventGift
+	EventGuard
+)
+
 func supbold(s string) string {
 	return fmt.Sprintf(`<span style="font-weight: bold; vertical-align: super; font-size: .8em">%s</span>`, s)
 }
@@ -36,43 +49,47 @@ func parseLevel(n int64) string {
 	}
 }
 
-func convertCoin(p int, price chan int) int {
-	v := p / 1e3
-	if v > 0 {
-		price <- v
-	}
-	return v
+func StartBlive(room string, ch chan DanmuEvent, f func(c *client.Client, ch chan DanmuEvent)) {
+	f(client.NewClient(room), ch)
 }
 
-type schat struct {
-	price   int
-	content string
-}
-
-func HtmlFormatter(room string, ch chan string, price chan int, sc chan schat) {
-	c := client.NewClient(room)
+func HTML(c *client.Client, ch chan DanmuEvent) {
 	// 弹幕事件
 	c.OnDanmaku(func(danmuku *message.Danmaku) {
-		ch <- fmt.Sprintf(`<span style="font-size: .64em">%s</span>%s`, escapeHTML(danmuku.Sender.Uname), bigbold("<!---->"+escapeHTML(danmuku.Content)))
+		ch <- DanmuEvent{
+			event:   EventDanmu,
+			content: fmt.Sprintf(`<span style="font-size: .64em">%s</span>%s`, escapeHTML(danmuku.Sender.Uname), bigbold("<!---->"+escapeHTML(danmuku.Content))),
+		}
 	})
 	// 醒目留言事件
 	c.OnSuperChat(func(superChat *message.SuperChat) {
-		v := convertCoin(superChat.Price*1e3, price)
 		identity := string(" ᴀʙᴄ"[superChat.UserInfo.GuardLevel]) + parseLevel(int64(superChat.UserInfo.UserLevel))
-		sc <- schat{price: v, content: fmt.Sprintf(`%s%s:%s`, supbold(identity), escapeHTML(superChat.UserInfo.Uname), bigbold(escapeHTML(superChat.Message)))}
+		ch <- DanmuEvent{
+			event:   EventSuperchat,
+			price:   superChat.Price,
+			content: fmt.Sprintf(`%s%s:%s`, supbold(identity), escapeHTML(superChat.UserInfo.Uname), bigbold(escapeHTML(superChat.Message))),
+		}
 	})
 	// 礼物事件
 	c.OnGift(func(gift *message.Gift) {
-		v := convertCoin(gift.TotalCoin, price)
+		v := gift.TotalCoin / 1e3
 		if gift.CoinType != "silver" && v >= 5 {
 			identity := " ᴀʙᴄ"[gift.GuardLevel]
-			ch <- bigbold(fmt.Sprintf(`%v%s 赠送%sx%d#%d`, identity, escapeHTML(gift.Uname), escapeHTML(gift.GiftName), gift.Num, v), .64+math.Max(math.Pow(float64(v), 1/3)/40, 1/(1+math.Pow(math.E, -.002*float64(v)+3))))
+			ch <- DanmuEvent{
+				event:   EventGift,
+				price:   v,
+				content: bigbold(fmt.Sprintf(`%v%s 赠送%sx%d#%d`, identity, escapeHTML(gift.Uname), escapeHTML(gift.GiftName), gift.Num, v), .64+math.Max(math.Pow(float64(v), 1/3)/40, 1/(1+math.Pow(math.E, -.002*float64(v)+3)))),
+			}
 		}
 	})
 	// 上舰事件
 	c.OnGuardBuy(func(guardBuy *message.GuardBuy) {
-		v := convertCoin(guardBuy.Price, price)
-		ch <- fmt.Sprintf(`%s 成为 %s#%d`, bigbold(escapeHTML(guardBuy.Username)), bigbold(escapeHTML(guardBuy.GiftName)), v)
+		v := guardBuy.Price / 1e3
+		ch <- DanmuEvent{
+			event:   EventGuard,
+			price:   v,
+			content: fmt.Sprintf(`%s 成为 %s#%d`, bigbold(escapeHTML(guardBuy.Username)), bigbold(escapeHTML(guardBuy.GiftName)), v),
+		}
 	})
 	// 【可选】设置弹幕服务器，不设置就会从 api 获取服务器地址
 	// 该函数设置服务器为 wss://broadcastlv.chat.bilibili.com/sub
@@ -83,10 +100,6 @@ func HtmlFormatter(room string, ch chan string, price chan int, sc chan schat) {
 		fmt.Println(err)
 	}
 	/*
-		cl := blivedm.BLiveWsClient{ShortId: room, HearbeatInterval: 25 * time.Second}
-		fmt.Println(cl.GetRoomInfo(), cl.GetDanmuInfo())
-		cl.ConnectDanmuServer()
-
 		cl.RegHandler(blivedm.CmdDanmaku, func(context *blivedm.Context) {
 			msg, _ := context.ToDanmakuMessage()
 			var identity string
