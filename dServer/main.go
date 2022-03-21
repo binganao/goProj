@@ -50,8 +50,8 @@ func addDanmu(s string) {
 	fmt.Println(s)
 }
 
-func handleDanmuEvent(c DanmuEvent) {
-	switch c.event {
+func handleDanmuEvent(c *DanmuEvent) {
+	switch (*c).event {
 	case EventDanmu:
 		addDanmu(c.content)
 	case EventGuard:
@@ -75,7 +75,7 @@ func main() {
 
 	serverStatus.room = "545068"
 	rooms[serverStatus.room] = &RoomStatus{}
-	ch := make(chan DanmuEvent)
+	ch := make(chan *DanmuEvent)
 	StartBlive(serverStatus.room, ch, HTML)
 	for {
 		select {
