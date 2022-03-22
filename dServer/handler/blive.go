@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -11,9 +11,9 @@ import (
 )
 
 type DanmuEvent struct {
-	event   int
-	price   int
-	content string
+	Event   int
+	Price   int
+	Content string
 }
 
 const (
@@ -53,17 +53,17 @@ func HTML(c *client.Client, ch chan *DanmuEvent) {
 	// 弹幕事件
 	c.OnDanmaku(func(danmuku *message.Danmaku) {
 		ch <- &DanmuEvent{
-			event:   EventDanmu,
-			content: fmt.Sprintf(`<span style="font-size: .64em">%s</span>%s`, html.EscapeString(danmuku.Sender.Uname), bigbold("<!---->"+html.EscapeString(danmuku.Content))),
+			Event:   EventDanmu,
+			Content: fmt.Sprintf(`<span style="font-size: .64em">%s</span>%s`, html.EscapeString(danmuku.Sender.Uname), bigbold("<!---->"+html.EscapeString(danmuku.Content))),
 		}
 	})
 	// 醒目留言事件
 	c.OnSuperChat(func(superChat *message.SuperChat) {
 		identity := string(" ᴀʙᴄ"[superChat.UserInfo.GuardLevel]) + parseLevel(int64(superChat.UserInfo.UserLevel))
 		ch <- &DanmuEvent{
-			event:   EventSuperchat,
-			price:   superChat.Price,
-			content: fmt.Sprintf(`%s%s:%s`, supbold(identity), html.EscapeString(superChat.UserInfo.Uname), bigbold(html.EscapeString(superChat.Message))),
+			Event:   EventSuperchat,
+			Price:   superChat.Price,
+			Content: fmt.Sprintf(`%s%s:%s`, supbold(identity), html.EscapeString(superChat.UserInfo.Uname), bigbold(html.EscapeString(superChat.Message))),
 		}
 	})
 	// 礼物事件
@@ -72,9 +72,9 @@ func HTML(c *client.Client, ch chan *DanmuEvent) {
 		if gift.CoinType != "silver" && v >= 5 {
 			identity := " ᴀʙᴄ"[gift.GuardLevel]
 			ch <- &DanmuEvent{
-				event:   EventGift,
-				price:   v,
-				content: bigbold(fmt.Sprintf(`%v%s 赠送%sx%d#%d`, identity, html.EscapeString(gift.Uname), html.EscapeString(gift.GiftName), gift.Num, v), .64+math.Max(math.Pow(float64(v), 1/3)/40, 1/(1+math.Pow(math.E, -.002*float64(v)+3)))),
+				Event:   EventGift,
+				Price:   v,
+				Content: bigbold(fmt.Sprintf(`%v%s 赠送%sx%d#%d`, identity, html.EscapeString(gift.Uname), html.EscapeString(gift.GiftName), gift.Num, v), .64+math.Max(math.Pow(float64(v), 1/3)/40, 1/(1+math.Pow(math.E, -.002*float64(v)+3)))),
 			}
 		}
 	})
@@ -82,9 +82,9 @@ func HTML(c *client.Client, ch chan *DanmuEvent) {
 	c.OnGuardBuy(func(guardBuy *message.GuardBuy) {
 		v := guardBuy.Price / 1e3
 		ch <- &DanmuEvent{
-			event:   EventGuard,
-			price:   v,
-			content: fmt.Sprintf(`%s 成为 %s#%d`, bigbold(html.EscapeString(guardBuy.Username)), bigbold(html.EscapeString(guardBuy.GiftName)), v),
+			Event:   EventGuard,
+			Price:   v,
+			Content: fmt.Sprintf(`%s 成为 %s#%d`, bigbold(html.EscapeString(guardBuy.Username)), bigbold(html.EscapeString(guardBuy.GiftName)), v),
 		}
 	})
 	// 【可选】设置弹幕服务器，不设置就会从 api 获取服务器地址
@@ -107,4 +107,16 @@ func HTML(c *client.Client, ch chan *DanmuEvent) {
 		})
 	*/
 	fmt.Println("started")
+}
+
+func addDanmu(s string) {
+	history = append(history, s)
+	if len(history) > 2e4 {
+		history = history[2000:]
+		serverStatus.i -= 2000
+		if serverStatus.i < 0 {
+			serverStatus.i = 0
+		}
+	}
+	fmt.Println(s)
 }
