@@ -49,6 +49,9 @@ func HTML(c *client.Client) {
 		msg := new(fix.Danmaku)
 		msg.Parse(s)
 		go cover(func() {
+			if msg.Msg == "" {
+				return
+			}
 			var identity string
 			if msg.Admin {
 				identity += "⚑"

@@ -3,6 +3,7 @@ package main
 import (
 	"dServer/settings"
 	"fmt"
+	"time"
 )
 
 func Start() {
@@ -34,6 +35,7 @@ func GetControl() bool {
 			return true
 		case CMD_RESTART:
 			//restart
+			<-time.After(time.Second)
 			return true
 		case CMD_UPGRADE:
 			//upgrade

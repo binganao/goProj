@@ -95,17 +95,15 @@ func Reverse(original []string) []string {
 }
 
 func GetDanmu(c *gin.Context) {
-	SetHeaderHTML(c)
 	res := ""
 	i := ServerStatus.i
 	if i < len(History) {
 		res = strings.Join(History[i:], "<br>")
 	}
-	c.String(HTTP_OK, res)
+	HTMLString(c, res)
 }
 
 func GetHistory(c *gin.Context) {
-	SetHeaderHTML(c)
 	limit := 2000
 	former := len(History) - limit
 	var res string
@@ -114,11 +112,36 @@ func GetHistory(c *gin.Context) {
 	} else {
 		res = strings.Join(Reverse(History), "<br>")
 	}
-	c.String(HTTP_OK, res)
+	HTMLString(c, res)
 }
 
 func GetFavicon(c *gin.Context) {
 	c.Status(204)
+}
+
+func RecordClient(c *gin.Context) {
+	ua := c.Request.UserAgent()
+	path := c.Request.RequestURI
+	if v, ok := ServerStatus.clients[ua]; ok {
+		last, _ := time.Parse("2006-01-02T15:04:05MST", v.Last+time.Now().Format("MST"))
+		v.Interval = int(time.Now().Sub(last) / time.Second)
+		v.Reads++
+	} else {
+		ServerStatus.clients[ua] = &ClientsStruct{
+			First:    time.Now().Format("2006-01-02T15:04:05"),
+			Interval: 0,
+			Path:     []string{},
+			Reads:    1,
+			Kick:     "",
+		}
+	}
+
+	ServerStatus.clients[ua].Last = time.Now().Format("2006-01-02T15:04:05")
+	paths := ServerStatus.clients[ua].Path
+	if len(paths) >= 4 {
+		paths = paths[len(paths)-4:]
+	}
+	ServerStatus.clients[ua].Path = append(paths, path)
 }
 
 func SetKick(c *gin.Context) {
