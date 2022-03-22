@@ -1,4 +1,4 @@
-package handler
+package main
 
 import (
 	"fmt"
@@ -68,17 +68,16 @@ func HTML(c *client.Client) {
 }
 
 func addDanmu(s string) {
-	history = append(history, s)
-	if len(history) > 2e4 {
-		history = history[2000:]
-		serverStatus.i -= 2000
-		if serverStatus.i < 0 {
-			serverStatus.i = 0
+	History = append(History, s)
+	if len(History) > 2e4 {
+		History = History[2000:]
+		ServerStatus.i -= 2000
+		if ServerStatus.i < 0 {
+			ServerStatus.i = 0
 		}
 	}
-	fmt.Println(s)
 }
 
 func addPurse(price int) {
-	rooms[serverStatus.room].purse += price
+	Rooms[ServerStatus.room].purse += price
 }

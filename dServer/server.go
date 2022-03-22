@@ -1,13 +1,12 @@
-package handler
+package main
 
 import (
-	"dServer/routers"
 	"dServer/settings"
 	"fmt"
 	"time"
 )
 
-type RoomStatus struct {
+type Roomstatus struct {
 	purse     int
 	superchat []struct {
 		expire  time.Time
@@ -16,9 +15,9 @@ type RoomStatus struct {
 	}
 }
 
-var history []string
-var rooms map[string]*RoomStatus
-var serverStatus struct {
+var History []string
+var Rooms map[string]*Roomstatus
+var ServerStatus struct {
 	unread  int
 	i       int
 	room    string
@@ -37,15 +36,20 @@ var serverStatus struct {
 }
 
 func Start() {
-	serverStatus.room = "545068"
-	rooms = make(map[string]*RoomStatus)
-	if _, ok := rooms[serverStatus.room]; !ok {
-		rooms[serverStatus.room] = &RoomStatus{}
+	ServerStatus.room = "545068"
+	Rooms = make(map[string]*Roomstatus)
+	if _, ok := Rooms[ServerStatus.room]; !ok {
+		Rooms[ServerStatus.room] = &Roomstatus{}
 	}
-	go StartBlive(serverStatus.room, HTML)
+	go StartBlive(ServerStatus.room, HTML)
 
 	controlChan := make(chan string)
 	go StartServer(controlChan)
+	GetControl(controlChan)
+}
+
+func GetControl(ch chan string) {
+	<-ch
 }
 
 func StartServer(ch chan string) {
@@ -56,7 +60,8 @@ func StartServer(ch chan string) {
 		"[SLEEP] & [RESTART] pong<-",
 		"[UPGRADE] it depends on network",
 	}
-	fmt.Println(serverStatus, statusContent[serverStatus.status])
-	r := routers.InitRouters()
+	fmt.Println(ServerStatus, statusContent[ServerStatus.status])
+
+	r := InitRouters()
 	r.Run(":" + settings.Port)
 }
