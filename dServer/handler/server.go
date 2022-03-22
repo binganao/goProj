@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"dServer/handler"
 	"dServer/routers"
 	"dServer/settings"
 	"fmt"
@@ -37,48 +36,19 @@ var serverStatus struct {
 	}
 }
 
-func addDanmu(s string) {
-	history = append(history, s)
-	if len(history) > 2e4 {
-		history = history[2000:]
-		serverStatus.i -= 2000
-		if serverStatus.i < 0 {
-			serverStatus.i = 0
-		}
-	}
-	fmt.Println(s)
-}
-
-func handleDanmuEvent(ch chan *handler.DanmuEvent) {
-	for {
-		c := <-ch
-		switch c.Event {
-		case handler.EventDanmu:
-			addDanmu(c.Content)
-		case handler.EventGuard:
-			fallthrough
-		case handler.EventGift:
-			rooms[serverStatus.room].purse += c.Price
-			addDanmu(c.Content)
-			//case handler.EventSuperchat:
-		}
-	}
-}
-
 func Start() {
 	serverStatus.room = "545068"
+	rooms = make(map[string]*RoomStatus)
 	if _, ok := rooms[serverStatus.room]; !ok {
 		rooms[serverStatus.room] = &RoomStatus{}
 	}
-	ch := make(chan *handler.DanmuEvent)
-	go handler.StartBlive(serverStatus.room, ch, handler.HTML)
-	go handleDanmuEvent(ch)
+	go StartBlive(serverStatus.room, HTML)
 
 	controlChan := make(chan string)
-	go startServer(controlChan)
+	go StartServer(controlChan)
 }
 
-func startServer(ch chan string) {
+func StartServer(ch chan string) {
 	statusContent := []string{
 		"",
 		"[SLEEP] no room (CAREFUL with s4f_: cmd)",
