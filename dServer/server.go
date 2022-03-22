@@ -18,7 +18,6 @@ type Roomstatus struct {
 var History []string
 var Rooms map[string]*Roomstatus
 var ServerStatus struct {
-	unread  int
 	i       int
 	room    string
 	pop     int
@@ -34,6 +33,7 @@ var ServerStatus struct {
 		browser  string
 	}
 }
+var StatusList []string
 
 func Start() {
 	ServerStatus.room = "545068"
@@ -53,14 +53,14 @@ func GetControl(ch chan string) {
 }
 
 func StartServer(ch chan string) {
-	statusContent := []string{
+	StatusList = []string{
 		"",
 		"[SLEEP] no room (CAREFUL with s4f_: cmd)",
 		"[SLEEP] & [STUCK] at que.qsize() > 5000",
 		"[SLEEP] & [RESTART] pong<-",
 		"[UPGRADE] it depends on network",
 	}
-	fmt.Println(ServerStatus, statusContent[ServerStatus.status])
+	fmt.Println(ServerStatus, StatusList[ServerStatus.status])
 
 	r := InitRouters()
 	r.Run(":" + settings.Port)

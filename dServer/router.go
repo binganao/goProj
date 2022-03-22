@@ -9,8 +9,9 @@ func InitRouters() *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
-	r.GET("/", Ok)
-	r.GET("/history", GetHistory)
+	r.GET("/", GetApi)
+	r.POST("/", PostApi)
+	r.GET("/favicon.ico", GetFavicon)
 
 	return r
 }
