@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dServer/fix"
 	"fmt"
 	"html"
 	"math"
@@ -15,14 +16,43 @@ type DanmuEvent struct {
 	Content string
 }
 
+func cover(f func()) {
+	defer func() {
+		if pan := recover(); pan != nil {
+			fmt.Printf("event error: %v\n", pan)
+		}
+	}()
+	f()
+}
+
 func StartBlive(room string, f func(c *client.Client)) {
-	f(client.NewClient(room))
+	c := client.NewClient(room)
+	f(c)
+	// 【可选】设置弹幕服务器，不设置就会从 api 获取服务器地址
+	// 该函数设置服务器为 wss://broadcastlv.chat.bilibili.com/sub
+	c.UseDefaultHost()
+	// 启动
+	err := c.ConnectAndStart()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("started")
 }
 
 func HTML(c *client.Client) {
 	// 弹幕事件
-	c.OnDanmaku(func(danmuku *message.Danmaku) {
-		addDanmu(fmt.Sprintf(`<span style="font-size: .64em">%s</span>%s`, html.EscapeString(danmuku.Sender.Uname), bigbold("<!---->"+html.EscapeString(danmuku.Content))))
+	// fix to lost info
+	c.RegisterCustomEventHandler("DANMU_MSG", func(s string) {
+		msg := new(fix.Danmaku)
+		msg.Parse(s)
+		go cover(func() {
+			var identity string
+			if msg.Admin {
+				identity += "⚑"
+			}
+			identity += string(" ᴀʙᴄ"[msg.PrivilegeType]) + parseLevel(msg.UserLevel)
+			addDanmu(fmt.Sprintf(`<span style="font-size: .64em">%s%s</span>%s`, identity, html.EscapeString(msg.Uname), bigbold("<!---->"+html.EscapeString(msg.Msg))))
+		})
 	})
 	// 醒目留言事件 UNdONE
 	c.OnSuperChat(func(superChat *message.SuperChat) {
@@ -45,26 +75,9 @@ func HTML(c *client.Client) {
 		addPurse(v)
 		addDanmu(fmt.Sprintf(`%s 成为 %s#%d`, bigbold(html.EscapeString(guardBuy.Username)), bigbold(html.EscapeString(guardBuy.GiftName)), v))
 	})
-	// 【可选】设置弹幕服务器，不设置就会从 api 获取服务器地址
-	// 该函数设置服务器为 wss://broadcastlv.chat.bilibili.com/sub
-	c.UseDefaultHost()
-	// 启动
-	err := c.ConnectAndStart()
-	if err != nil {
-		fmt.Println(err)
-	}
-	/*
-		cl.RegHandler(blivedm.CmdDanmaku, func(context *blivedm.Context) {
-			msg, _ := context.ToDanmakuMessage()
-			var identity string
-			if msg.Admin {
-				identity += "⚑"
-			}
-			identity += string(" ᴀʙᴄ"[msg.PrivilegeType]) + parseLevel(msg.UserLevel)
-			ch <- fmt.Sprintf(`<span style="font-size: .64em">%s%s</span>%s`, supbold(identity), html.EscapeString(msg.Uname), bigbold("<!---->"+html.EscapeString(msg.Msg)))
-		})
-	*/
-	fmt.Println("started")
+	// pop
+	// no way
+	// try api
 }
 
 func addDanmu(s string) {

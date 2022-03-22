@@ -7,5 +7,5 @@ var (
 )
 
 func ReadFlags() {
-	flag.StringVar(&Port, "port", "8080", "")
+	flag.StringVar(&Port, "port", "8099", "")
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -82,14 +83,25 @@ func GetApi(c *gin.Context) {
 
 func PostApi(c *gin.Context) {}
 
-func GetStatus(c *gin.Context) {
-	c.JSON(STATUS_OK, gin.H{
+func insertStatus() {
+	js, _ := json.Marshal(GetServerStatus())
+	History = append(History, "<!--"+string(js)+"-->")
+}
+
+//readfromlive
+
+func GetServerStatus() gin.H {
+	return gin.H{
 		"room":           ServerStatus.room,
 		"pop":            ServerStatus.pop,
 		"unread":         len(History) - ServerStatus.i,
 		"status":         ServerStatus.status,
 		"status_content": StatusList[ServerStatus.status],
-	})
+	}
+}
+
+func GetStatus(c *gin.Context) {
+	c.JSON(STATUS_OK, GetServerStatus())
 }
 
 func Reverse(original []string) []string {

@@ -1,9 +1,7 @@
-package main
+package fix
 
 //fix from https://github.com/aynakeya/blivedm/blob/main/context.go
 import (
-	"bytes"
-
 	"github.com/tidwall/gjson"
 )
 
@@ -45,8 +43,7 @@ type Danmaku struct {
 	PrivilegeType int64
 }
 
-func (d *Danmaku) Parse(data []byte) Danmaku {
-	s := bytes.NewBuffer(data).String()
+func (d *Danmaku) Parse(s string) Danmaku {
 	Get := func(place string) gjson.Result {
 		return gjson.Get(s, place)
 	}
