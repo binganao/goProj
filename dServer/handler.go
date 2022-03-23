@@ -42,9 +42,9 @@ func CorsAccess(url string, data string, method string, ori_headers ...map[strin
 	}
 }
 
-func insertStatus() {
-	js, _ := json.Marshal(GetServerStatus())
-	History = append(History, "<!--"+string(js)+"-->")
+func updatePop(pop int) {
+	ServerStatus.pop = pop
+	ServerStatus.isPopUnread = true
 }
 
 func GetServerStatus() gin.H {
@@ -100,15 +100,23 @@ func GetDanmu(c *gin.Context) {
 		return
 	}
 	res := ""
-	for j := 0; j <= 1; j++ {
-		i := ServerStatus.i
-		if i < len(History) {
-			res = strings.Join(History[i:], "<br>")
-			ServerStatus.i = len(History)
-			break
-		} else if j == 0 {
-			<-time.After(time.Second * 15)
+	if ServerStatus.i >= len(History) {
+		ServerStatus.waitDanmu.IsRunning = true
+		select {
+		case <-ServerStatus.waitDanmu.Done:
+		case <-time.After(time.Second * 15):
 		}
+		ServerStatus.waitDanmu.IsRunning = false
+	}
+	i := ServerStatus.i
+	if i < len(History) {
+		res = strings.Join(History[i:], "<br>")
+		ServerStatus.i = len(History)
+	}
+	if ServerStatus.isPopUnread {
+		ServerStatus.isPopUnread = false
+		js, _ := json.Marshal(GetServerStatus())
+		res += "<br><!--" + string(js) + "-->"
 	}
 	HTMLString(c, res)
 }

@@ -30,13 +30,15 @@ type ClientsStruct struct {
 }
 
 var ServerStatus struct {
-	i          int
-	room       string
-	other_room string
-	pop        int
-	status     int
-	store      string
-	clients    map[string]*ClientsStruct
+	i           int
+	room        string
+	other_room  string
+	pop         int
+	status      int
+	store       string
+	isPopUnread bool
+	waitDanmu   Watcher
+	clients     map[string]*ClientsStruct
 }
 var StatusList []string
 
@@ -62,5 +64,6 @@ func init() {
 		"[UPGRADE] it depends on network",
 	}
 	ServerStatus.clients = make(map[string]*ClientsStruct)
+	ServerStatus.waitDanmu = Watcher{Done: make(chan bool)}
 	control = make(chan ControlStruct)
 }

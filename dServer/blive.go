@@ -74,6 +74,10 @@ func addDanmu(s string) {
 			ServerStatus.i = 0
 		}
 	}
+	if ServerStatus.waitDanmu.IsRunning {
+		ServerStatus.waitDanmu.IsRunning = false
+		ServerStatus.waitDanmu.Done <- true
+	}
 }
 
 func addPurse(price int) {

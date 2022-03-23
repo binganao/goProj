@@ -62,10 +62,9 @@ func StartServer() {
 
 func StartPop(room string, t Watcher) Watcher {
 	t.Stop()
-	return StartUrlWatcher(time.Second*30, "https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET", func(s string) {
+	return StartUrlWatcher(time.Minute, "https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET", func(s string) {
 		js := gjson.Get(s, "data.room_info.online")
-		ServerStatus.pop = int(js.Int())
-		insertStatus()
+		updatePop(int(js.Int()))
 	})
 }
 
