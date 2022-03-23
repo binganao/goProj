@@ -5,30 +5,34 @@ import (
 	"fmt"
 	"time"
 
+	//grmon "github.com/bcicen/grmon/agent"
 	"github.com/tidwall/gjson"
 )
 
 func Start() {
+	//grmon.Start()
 	ServerStatus.room = settings.Room
 	Rooms = make(map[string]*Roomstatus)
 	StartServer()
+	var t Watcher
 
-	if _, ok := Rooms[ServerStatus.room]; !ok {
-		Rooms[ServerStatus.room] = &Roomstatus{}
+	for {
+		if _, ok := Rooms[ServerStatus.room]; !ok {
+			Rooms[ServerStatus.room] = &Roomstatus{}
+		}
+		ExiprePurse()
+
+		c := StartBlive(ServerStatus.room, HTML)
+		t = StartPop(ServerStatus.room, t)
+
+		if GetControl() {
+			// fork from original blivedm repo
+			// changes to Danmuku struct, Stop, Log.Fatal
+			c.Stop()
+			continue
+		}
+		<-time.After(time.Millisecond * 50)
 	}
-	ExiprePurse()
-
-	StartBlive(ServerStatus.room, HTML)
-	StartPop(ServerStatus.room)
-
-	if GetControl() {
-		// Didn't find a way to restart blive as
-		// it doesn't have a Stop() methmod and
-		// the roomId is immutable outside.
-		// ---- APPEND ---
-		// NO way to deal with DIRTY log.Fatal problem from blive
-	}
-	<-time.After(time.Millisecond * 200)
 }
 
 func GetControl() bool {
@@ -41,10 +45,10 @@ func GetControl() bool {
 		case CMD_RESTART:
 			//restart
 			<-time.After(time.Millisecond * 100)
-			return true
+			return false
 		case CMD_UPGRADE:
 			//upgrade
-			return true
+			return false
 		}
 	}
 }
@@ -56,8 +60,9 @@ func StartServer() {
 	go r.Run(":" + settings.Port)
 }
 
-func StartPop(room string) {
-	RunUrlWatcher("RoomPop", time.Second*30, "https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET", func(s string) {
+func StartPop(room string, t Watcher) Watcher {
+	t.Stop()
+	return StartUrlWatcher(time.Second*30, "https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET", func(s string) {
 		js := gjson.Get(s, "data.room_info.online")
 		ServerStatus.pop = int(js.Int())
 	})
@@ -65,7 +70,7 @@ func StartPop(room string) {
 
 func ExiprePurse() {
 	for _, v := range Rooms {
-		if time.Now().Sub(v.purseExpire) > 2*24*3600*time.Second {
+		if time.Now().Sub(v.purseExpire) > 2*24*time.Hour {
 			v.purse = 0
 		}
 		var sc []ScStruct

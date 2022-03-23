@@ -6,8 +6,8 @@ import (
 	"html"
 	"math"
 
-	"github.com/Akegarasu/blivedm-go/client"
-	"github.com/Akegarasu/blivedm-go/message"
+	"github.com/wmillers/blivedm-go/client"
+	"github.com/wmillers/blivedm-go/message"
 )
 
 type DanmuEvent struct {
@@ -25,7 +25,7 @@ func cover(f func()) {
 	f()
 }
 
-func StartBlive(room string, f func(c *client.Client)) {
+func StartBlive(room string, f func(c *client.Client)) *client.Client {
 	c := client.NewClient(room)
 	f(c)
 	// 【可选】设置弹幕服务器，不设置就会从 api 获取服务器地址
@@ -36,14 +36,14 @@ func StartBlive(room string, f func(c *client.Client)) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("started" + room)
+	fmt.Println("started: " + room)
+	return c
 }
 
 func HTML(c *client.Client) {
 	// 弹幕事件
 	// fix to lost info
 	c.RegisterCustomEventHandler("DANMU_MSG", func(s string) {
-		panic("ghgj")
 		msg := new(fix.Danmaku)
 		msg.Parse(s)
 		go cover(func() {

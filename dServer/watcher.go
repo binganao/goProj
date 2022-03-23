@@ -4,66 +4,34 @@ import (
 	"time"
 )
 
-// run: register (check) <- run -> go
-type WatcherStruct struct {
+type Watcher struct {
 	IsRunning bool
-	stop      chan bool
+	Done      chan bool
 }
 
-var UrlWatcher map[string]WatcherStruct
-
-func init() {
-	UrlWatcher = make(map[string]WatcherStruct)
+func StartUrlWatcher(t time.Duration, url string, data string, method string, f func(string)) Watcher {
+	c := Watcher{
+		IsRunning: true,
+		Done:      make(chan bool),
+	}
+	go c.run(t, url, data, method, f)
+	return c
 }
 
-func goUrlWatcher(name string, t time.Duration, url string, data string, method string, f func(string)) {
+func (c *Watcher) run(t time.Duration, url string, data string, method string, f func(string)) {
 	for {
 		select {
-		case <-UrlWatcher[name].stop:
-			break
+		case <-c.Done:
+			return
 		case <-time.After(t):
 			go cover(func() { f(CorsAccess(url, data, method)) })
 		}
 	}
 }
 
-func CheckUrlWatcher(name string) bool {
-	_, ok := UrlWatcher[name]
-	return ok
-}
-
-func RegisterUrlWatcher(name string) bool {
-	if CheckUrlWatcher(name) {
-		return false
-	} else {
-		UrlWatcher[name] = WatcherStruct{}
-		return true
-	}
-}
-
-func RunUrlWatcher(name string, t time.Duration, url string, data string, method string, f func(string)) {
-	if CheckUrlWatcher(name) {
-		StopUrlWatcher(name)
-	} else {
-		RegisterUrlWatcher(name)
-	}
-	go goUrlWatcher(name, t, url, data, method, f)
-}
-
-func StopUrlWatcher(name string) bool {
-	if CheckUrlWatcher(name) && UrlWatcher[name].IsRunning {
-		UrlWatcher[name].stop <- true
-		return true
-	} else {
-		return false
-	}
-}
-
-func UnregisterWatcher(name string) bool {
-	if CheckUrlWatcher(name) {
-		delete(UrlWatcher, name)
-		return true
-	} else {
-		return false
+func (c *Watcher) Stop() {
+	if c.IsRunning {
+		c.IsRunning = false
+		c.Done <- true
 	}
 }

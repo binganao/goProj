@@ -60,10 +60,9 @@ func GetServerStatus() gin.H {
 	}
 }
 
-func ChangeRoom(room string) (res string) {
+func ChangeRoom(room string) string {
 	room_id, _ := strconv.Atoi(room)
 	if room_id > 0 && room_id < 1e15 {
-		res = "[RECV] Room<b>" + room + "</b>"
 		if ServerStatus.other_room != "" || ServerStatus.room != room {
 			fmt.Println("[kill:" + room + "]")
 			ServerStatus.room = room
@@ -76,12 +75,12 @@ func ChangeRoom(room string) (res string) {
 		} else {
 			fmt.Println("[recv:butSame]")
 		}
+		return "[RECV] Room<b>" + room + "</b>"
 	} else if room_id == 0 {
-		res = "[RECV] Room Keeps"
+		return "[RECV] Room Keeps"
 	} else {
-		res = "[err] Not in safe range: " + room
+		return "[err] Not in safe range: " + room
 	}
-	return
 }
 
 func GetStatus(c *gin.Context) {

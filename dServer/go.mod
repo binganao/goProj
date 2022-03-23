@@ -3,9 +3,9 @@ module dServer
 go 1.18
 
 require (
-	github.com/Akegarasu/blivedm-go v0.0.0-20220123082101-faa6e45273a0
 	github.com/gin-gonic/gin v1.7.7
 	github.com/tidwall/gjson v1.13.0
+	github.com/wmillers/blivedm-go v0.0.0
 )
 
 require (
