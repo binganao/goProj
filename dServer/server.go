@@ -4,6 +4,8 @@ import (
 	"dServer/settings"
 	"fmt"
 	"time"
+
+	"github.com/tidwall/gjson"
 )
 
 func Start() {
@@ -17,6 +19,7 @@ func Start() {
 			Rooms[ServerStatus.room] = &Roomstatus{}
 		}
 		go StartBlive(ServerStatus.room, HTML, ch)
+		StartPop(ServerStatus.room)
 
 		if !GetControl() {
 			break
@@ -48,4 +51,11 @@ func StartServer() {
 
 	r := InitRouters()
 	r.Run(":" + settings.Port)
+}
+
+func StartPop(room string) {
+	RunUrlWatcher("RoomPop", time.Second*30, "https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET", func(s string) {
+		js := gjson.Get(s, "data.room_info.online")
+		ServerStatus.pop = int(js.Int())
+	})
 }

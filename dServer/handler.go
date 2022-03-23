@@ -13,13 +13,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CorsAccess(url string, data string, method string, ori_headers map[string][]string) string {
+func CorsAccess(url string, data string, method string, ori_headers ...map[string][]string) string {
 	headers := map[string]string{
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
 		"Accept":     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
 	}
-	if v, ok := ori_headers["Content-Type"]; ok {
-		headers["Content-Type"] = v[0]
+	if len(ori_headers) != 0 {
+		if v, ok := ori_headers[0]["Content-Type"]; ok {
+			headers["Content-Type"] = v[0]
+		}
 	}
 
 	request, _ := http.NewRequest(method, url, strings.NewReader(data))
