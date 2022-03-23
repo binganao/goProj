@@ -76,7 +76,7 @@ func ParseGet(c *gin.Context) {
 		`^upgrade$`: func(c *gin.Context) {
 			ServerStatus.pop = 1
 			HTMLString(c, "[UPGRADE] Depends on network")
-			control <- ControlStruct{cmd: CMD_RESTART}
+			control <- ControlStruct{cmd: CMD_UPGRADE}
 		},
 		`^status$`: GetStatus,
 		`^clients$`: func(c *gin.Context) {

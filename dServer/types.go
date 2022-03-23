@@ -2,14 +2,15 @@ package main
 
 import "time"
 
+type ScStruct struct {
+	expire  time.Time
+	price   int
+	content string
+}
 type Roomstatus struct {
 	purse       int
 	purseExpire time.Time
-	superchat   []struct {
-		expire  time.Time
-		price   int
-		content string
-	}
+	superchat   []ScStruct
 }
 
 var History []string
@@ -59,4 +60,5 @@ func init() {
 		"[UPGRADE] it depends on network",
 	}
 	ServerStatus.clients = make(map[string]*ClientsStruct)
+	control = make(chan ControlStruct)
 }

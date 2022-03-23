@@ -97,10 +97,20 @@ func Reverse(original []string) []string {
 }
 
 func GetDanmu(c *gin.Context) {
+	if CheckKick(c) {
+		HTMLString(c, "[JS]danmuOff('KICKED')")
+		return
+	}
 	res := ""
-	i := ServerStatus.i
-	if i < len(History) {
-		res = strings.Join(History[i:], "<br>")
+	for j := 0; j <= 1; j++ {
+		i := ServerStatus.i
+		if i < len(History) {
+			res = strings.Join(History[i:], "<br>")
+			ServerStatus.i = len(History)
+			break
+		} else if j == 0 {
+			<-time.After(time.Second * 15)
+		}
 	}
 	HTMLString(c, res)
 }

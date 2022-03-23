@@ -25,21 +25,18 @@ func cover(f func()) {
 	f()
 }
 
-func StartBlive(room string, f func(c *client.Client), ch chan bool) {
-	go func() {
-		c := client.NewClient(room)
-		f(c)
-		// 【可选】设置弹幕服务器，不设置就会从 api 获取服务器地址
-		// 该函数设置服务器为 wss://broadcastlv.chat.bilibili.com/sub
-		c.UseDefaultHost()
-		// 启动
-		err := c.ConnectAndStart()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println("started")
-	}()
-	<-ch
+func StartBlive(room string, f func(c *client.Client)) {
+	c := client.NewClient(room)
+	f(c)
+	// 【可选】设置弹幕服务器，不设置就会从 api 获取服务器地址
+	// 该函数设置服务器为 wss://broadcastlv.chat.bilibili.com/sub
+	c.UseDefaultHost()
+	// 启动
+	err := c.ConnectAndStart()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("started" + room)
 }
 
 func HTML(c *client.Client) {
