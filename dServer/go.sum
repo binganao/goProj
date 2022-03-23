@@ -56,8 +56,8 @@ github.com/tidwall/pretty v1.2.0/go.mod h1:ITEVvHYasfjBbM0u2Pg8T2nJnzm8xPwvNhhso
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go/codec v1.1.7 h1:2SvQaVZ1ouYrrKKwoSk2pzd4A9evlKJb9oTL+OaLUSs=
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
-github.com/wmillers/blivedm-go v0.0.0 h1:VWs/KDYSZcIALVh2DLGVf2/oe/Izhq5A8XSP0O65kzg=
-github.com/wmillers/blivedm-go v0.0.0/go.mod h1:kUQhKY+Q85vPiuf2NpG9H37BQaHGa+tgMOMBnHF03I0=
+github.com/wmillers/blivedm-go v0.0.3 h1:KNAzhLSts/TaRdmZNKOtd8lyle8mFibzwphwutRn2eY=
+github.com/wmillers/blivedm-go v0.0.3/go.mod h1:kUQhKY+Q85vPiuf2NpG9H37BQaHGa+tgMOMBnHF03I0=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 h1:7I4JAnoQBe7ZtJcBaYHi5UtiO8tQHbUSXxL+pnGRANg=

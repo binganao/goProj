@@ -34,9 +34,6 @@ func StartBlive(room string, f func(c *client.Client)) *client.Client {
 func HTML(c *client.Client) {
 	// 弹幕事件 (fork)
 	c.OnDanmaku(func(msg *message.Danmaku) {
-		if msg.Msg == "" {
-			return
-		}
 		var identity string
 		if msg.Admin {
 			identity += "⚑"
@@ -66,9 +63,6 @@ func HTML(c *client.Client) {
 		addPurse(v)
 		addDanmu(fmt.Sprintf(`%s 成为 %s#%d`, bigbold(html.EscapeString(guardBuy.Username)), bigbold(html.EscapeString(guardBuy.GiftName)), v))
 	})
-	// pop
-	// no way
-	// try api
 }
 
 func addDanmu(s string) {

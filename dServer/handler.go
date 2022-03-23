@@ -47,8 +47,6 @@ func insertStatus() {
 	History = append(History, "<!--"+string(js)+"-->")
 }
 
-//readfromlive
-
 func GetServerStatus() gin.H {
 	return gin.H{
 		"room":           ServerStatus.room,
