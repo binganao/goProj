@@ -1,10 +1,10 @@
 package main
 
 import (
-	"dServer/fix"
 	"fmt"
 	"html"
 	"math"
+	"time"
 
 	"github.com/wmillers/blivedm-go/client"
 	"github.com/wmillers/blivedm-go/message"
@@ -14,15 +14,6 @@ type DanmuEvent struct {
 	Event   int
 	Price   int
 	Content string
-}
-
-func cover(f func()) {
-	defer func() {
-		if pan := recover(); pan != nil {
-			fmt.Printf("event error: %v\n", pan)
-		}
-	}()
-	f()
 }
 
 func StartBlive(room string, f func(c *client.Client)) *client.Client {
@@ -41,28 +32,24 @@ func StartBlive(room string, f func(c *client.Client)) *client.Client {
 }
 
 func HTML(c *client.Client) {
-	// 弹幕事件
-	// fix to lost info
-	c.RegisterCustomEventHandler("DANMU_MSG", func(s string) {
-		msg := new(fix.Danmaku)
-		msg.Parse(s)
-		go cover(func() {
-			if msg.Msg == "" {
-				return
-			}
-			var identity string
-			if msg.Admin {
-				identity += "⚑"
-			}
-			identity += string(" ᴀʙᴄ"[msg.PrivilegeType]) + parseLevel(msg.UserLevel)
-			addDanmu(fmt.Sprintf(`<span style="font-size: .64em">%s%s</span>%s`, identity, html.EscapeString(msg.Uname), bigbold("<!---->"+html.EscapeString(msg.Msg))))
-		})
+	// 弹幕事件 (fork)
+	c.OnDanmaku(func(msg *message.Danmaku) {
+		if msg.Msg == "" {
+			return
+		}
+		var identity string
+		if msg.Admin {
+			identity += "⚑"
+		}
+		identity += string(" ᴀʙᴄ"[msg.PrivilegeType]) + parseLevel(msg.UserLevel)
+		addDanmu(fmt.Sprintf(`<span style="font-size: .64em">%s%s</span>%s`, identity, html.EscapeString(msg.Uname), bigbold("<!---->"+html.EscapeString(msg.Msg))))
 	})
-	// 醒目留言事件 UNdONE
+	// 醒目留言事件
 	c.OnSuperChat(func(superChat *message.SuperChat) {
 		identity := string(" ᴀʙᴄ"[superChat.UserInfo.GuardLevel]) + parseLevel(int64(superChat.UserInfo.UserLevel))
-		addPurse(superChat.Price)
-		addDanmu(fmt.Sprintf(`%s%s:%s`, supbold(identity), html.EscapeString(superChat.UserInfo.Uname), bigbold(html.EscapeString(superChat.Message))))
+		content := fmt.Sprintf(`%s%s:%s`, supbold(identity), html.EscapeString(superChat.UserInfo.Uname), bigbold(html.EscapeString(superChat.Message)))
+		addSuperChat(content, superChat.Price)
+		addDanmu(content)
 	})
 	// 礼物事件
 	c.OnGift(func(gift *message.Gift) {
@@ -96,5 +83,15 @@ func addDanmu(s string) {
 }
 
 func addPurse(price int) {
-	Rooms[ServerStatus.room].purse += price
+	Rooms[ServerStatus.room].Purse += price
+	Rooms[ServerStatus.room].PurseExpire = time.Now()
+}
+
+func addSuperChat(content string, price int) {
+	addPurse(price)
+	Rooms[ServerStatus.room].Superchat = append(Rooms[ServerStatus.room].Superchat, ScStruct{
+		Price:   price,
+		Content: content, //30, 2 50, 5 100, 10
+		Expire:  time.Now().Add(time.Minute * time.Duration(price/10)),
+	})
 }

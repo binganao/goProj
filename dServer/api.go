@@ -80,6 +80,7 @@ func ParseGet(c *gin.Context) {
 		},
 		`^status$`: GetStatus,
 		`^clients$`: func(c *gin.Context) {
+			// LOWER == private == emit
 			c.JSON(HTTP_OK, ServerStatus.clients)
 		},
 		`^kick$`: func(c *gin.Context) {

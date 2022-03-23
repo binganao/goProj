@@ -64,7 +64,7 @@ func ChangeRoom(room string) string {
 	room_id, _ := strconv.Atoi(room)
 	if room_id > 0 && room_id < 1e15 {
 		if ServerStatus.other_room != "" || ServerStatus.room != room {
-			fmt.Println("[kill:" + room + "]")
+			fmt.Println("[kill:" + ServerStatus.room + "]")
 			ServerStatus.room = room
 			ServerStatus.pop = 0
 			ServerStatus.other_room = ""
@@ -75,6 +75,7 @@ func ChangeRoom(room string) string {
 		} else {
 			fmt.Println("[recv:butSame]")
 		}
+		fmt.Println("3")
 		return "[RECV] Room<b>" + room + "</b>"
 	} else if room_id == 0 {
 		return "[RECV] Room Keeps"

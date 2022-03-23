@@ -5,14 +5,14 @@ import (
 )
 
 type ScStruct struct {
-	expire  time.Time
-	price   int
-	content string
+	Expire  time.Time
+	Price   int
+	Content string
 }
 type Roomstatus struct {
-	purse       int
-	purseExpire time.Time
-	superchat   []ScStruct
+	Purse       int
+	PurseExpire time.Time
+	Superchat   []ScStruct
 }
 
 var History []string

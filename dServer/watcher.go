@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -34,4 +35,13 @@ func (c *Watcher) Stop() {
 		c.IsRunning = false
 		c.Done <- true
 	}
+}
+
+func cover(f func()) {
+	defer func() {
+		if pan := recover(); pan != nil {
+			fmt.Printf("event error: %v\n", pan)
+		}
+	}()
+	f()
 }

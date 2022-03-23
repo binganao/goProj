@@ -18,7 +18,7 @@ func Start() {
 
 	for {
 		if _, ok := Rooms[ServerStatus.room]; !ok {
-			Rooms[ServerStatus.room] = &Roomstatus{}
+			Rooms[ServerStatus.room] = &Roomstatus{Superchat: []ScStruct{}}
 		}
 		ExiprePurse()
 
@@ -70,15 +70,15 @@ func StartPop(room string, t Watcher) Watcher {
 
 func ExiprePurse() {
 	for _, v := range Rooms {
-		if time.Now().Sub(v.purseExpire) > 2*24*time.Hour {
-			v.purse = 0
+		if time.Now().Sub(v.PurseExpire) > 2*24*time.Hour {
+			v.Purse = 0
 		}
 		var sc []ScStruct
-		for _, j := range v.superchat {
-			if j.expire.Sub(time.Now()) > 0 {
+		for _, j := range v.Superchat {
+			if j.Expire.Sub(time.Now()) > 0 {
 				sc = append(sc, j)
 			}
 		}
-		v.superchat = sc
+		v.Superchat = sc
 	}
 }
