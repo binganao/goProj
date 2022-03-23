@@ -43,6 +43,7 @@ func HTML(c *client.Client) {
 	// 弹幕事件
 	// fix to lost info
 	c.RegisterCustomEventHandler("DANMU_MSG", func(s string) {
+		panic("ghgj")
 		msg := new(fix.Danmaku)
 		msg.Parse(s)
 		go cover(func() {

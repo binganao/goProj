@@ -22,6 +22,11 @@ func Start() {
 	StartPop(ServerStatus.room)
 
 	if GetControl() {
+		// Didn't find a way to restart blive as
+		// it doesn't have a Stop() methmod and
+		// the roomId is immutable outside.
+		// ---- APPEND ---
+		// NO way to deal with DIRTY log.Fatal problem from blive
 	}
 	<-time.After(time.Millisecond * 200)
 }
