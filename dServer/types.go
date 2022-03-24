@@ -1,10 +1,12 @@
 package main
 
 import (
+	"dServer/settings"
+	"sync"
 	"time"
 )
 
-type ScStruct struct {
+type Superchat struct {
 	Expire  time.Time
 	Price   int
 	Content string
@@ -12,13 +14,19 @@ type ScStruct struct {
 type Roomstatus struct {
 	Purse       int
 	PurseExpire time.Time
-	Superchat   []ScStruct
+	Superchat   []Superchat
 }
 
 var History []string
-var Rooms map[string]*Roomstatus
 
-type ClientsStruct struct {
+type RoomsMutex struct {
+	RWMutex sync.RWMutex
+	Value   map[string]*Roomstatus
+}
+
+var Rooms RoomsMutex
+
+type Clients struct {
 	First    string   `json:"first"`
 	Interval int      `json:"interval"`
 	Last     string   `json:"last"`
@@ -29,16 +37,21 @@ type ClientsStruct struct {
 	//browser  string
 }
 
+type ClientsMutex struct {
+	RWMutex sync.RWMutex
+	Value   map[string]*Clients
+}
+
 var ServerStatus struct {
-	i           int
-	room        string
-	other_room  string
-	pop         int
-	status      int
-	store       string
-	isPopUnread bool
-	waitDanmu   Watcher
-	clients     map[string]*ClientsStruct
+	Index       int
+	Room        string
+	Other_room  string
+	Pop         int
+	Status      int
+	Store       string
+	IsPopUnread bool
+	WaitDanmu   Watcher      `json:"-"`
+	Clients     ClientsMutex `json:"-"`
 }
 var StatusList []string
 
@@ -56,6 +69,8 @@ const (
 )
 
 func init() {
+	settings.ReadFlags()
+
 	StatusList = []string{
 		"",
 		"[SLEEP] no room (CAREFUL with s4f_: cmd)",
@@ -63,6 +78,12 @@ func init() {
 		"[SLEEP] & [RESTART] pong<-",
 		"[UPGRADE] it depends on network",
 	}
-	ServerStatus.clients = make(map[string]*ClientsStruct)
+
+	ServerStatus.Room = settings.Room
+	ServerStatus.Store = settings.Store
+	ServerStatus.Clients = ClientsMutex{Value: make(map[string]*Clients)}
+
 	control = make(chan ControlStruct)
+
+	Rooms = RoomsMutex{Value: make(map[string]*Roomstatus)}
 }

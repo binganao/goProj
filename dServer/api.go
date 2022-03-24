@@ -79,19 +79,19 @@ func ParseGet(c *gin.Context) {
 		},
 		`^history$`: GetHistory,
 		`^restart$`: func(c *gin.Context) {
-			ServerStatus.pop = 1
+			ServerStatus.Pop = 1
 			HTMLString(c, "[RESTART] RECV OK")
 			control <- ControlStruct{cmd: CMD_RESTART}
 		},
 		`^upgrade$`: func(c *gin.Context) {
-			ServerStatus.pop = 1
+			ServerStatus.Pop = 1
 			HTMLString(c, "[UPGRADE] (not implement) Depends on network")
 			control <- ControlStruct{cmd: CMD_UPGRADE}
 		},
 		`^status$`: GetStatus,
 		`^clients$`: func(c *gin.Context) {
-			// LOWER == private == emit
-			IndentedJSON(c, HTTP_OK, ServerStatus.clients)
+			// LOWER == private == omit
+			IndentedJSON(c, HTTP_OK, ServerStatus.Clients.Value)
 		},
 		`^kick$`: func(c *gin.Context) {
 			SetKick(c)
@@ -102,8 +102,8 @@ func ParseGet(c *gin.Context) {
 			HTMLString(c, "[CALLING]")
 		},
 		`^js:`: func(c *gin.Context) {
-			if ServerStatus.pop == 1 {
-				ServerStatus.pop = 9999
+			if ServerStatus.Pop == 1 {
+				ServerStatus.Pop = 9999
 			}
 			js := cmd[strings.Index(cmd, ":")+1:]
 			addDanmu("[JS] " + js)
@@ -122,8 +122,11 @@ func ParseGet(c *gin.Context) {
 		`^(screen|neo)fetch$`: func(c *gin.Context) {
 			HTMLString(c, RunShell(cmd, 10, true))
 		},
-		`store`: func(c *gin.Context) {
-			HTMLString(c, ServerStatus.store)
+		`^store$`: func(c *gin.Context) {
+			HTMLString(c, ServerStatus.Store)
+		},
+		`^test$`: func(ctx *gin.Context) {
+			JSON(c, HTTP_OK, ServerStatus)
 		},
 		//any
 	}
@@ -139,7 +142,7 @@ func ParsePost(c *gin.Context) {
 	statement := map[string]func(c *gin.Context){
 		`^store$`: func(c *gin.Context) {
 			s, _ := c.GetRawData()
-			ServerStatus.store = string(s)
+			ServerStatus.Store = string(s)
 		},
 		`^cors:`: func(c *gin.Context) {
 			s, _ := c.GetRawData()

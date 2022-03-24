@@ -17,20 +17,21 @@ func Start() {
 	if settings.Debug {
 		grmon.Start()
 	}
-	ServerStatus.room = settings.Room
-	Rooms = make(map[string]*Roomstatus)
-	StartServer()
-	var t Watcher
 
+	StartServer()
+
+	var t Watcher
 	for {
-		if _, ok := Rooms[ServerStatus.room]; !ok {
-			Rooms[ServerStatus.room] = &Roomstatus{Superchat: []ScStruct{}}
+		Rooms.RWMutex.Lock()
+		if _, ok := Rooms.Value[ServerStatus.Room]; !ok {
+			Rooms.Value[ServerStatus.Room] = &Roomstatus{Superchat: []Superchat{}}
 		}
+		Rooms.RWMutex.Unlock()
 		ExiprePurse()
 
-		t = StartPop(ServerStatus.room, t)
+		t = StartPop(ServerStatus.Room, t)
 
-		if GetControl(StartBlive(ServerStatus.room, HTML)) {
+		if GetControl(StartBlive(ServerStatus.Room, HTML)) {
 			// fork from original blivedm repo
 			// changes to Danmuku struct, Stop, Log.Fatal
 			continue
@@ -38,6 +39,7 @@ func Start() {
 			break
 		}
 	}
+
 	fmt.Println("[QUIT]")
 }
 
@@ -46,7 +48,7 @@ func GetControl(c *client.Client) bool {
 		state := <-control
 		switch state.cmd {
 		case CMD_CHANGE_ROOM:
-			ServerStatus.room = state.room
+			ServerStatus.Room = state.room
 			c.Stop()
 			return true
 		case CMD_UPGRADE:
@@ -54,22 +56,26 @@ func GetControl(c *client.Client) bool {
 			//return false
 			fallthrough
 		case CMD_RESTART:
-			c.Stop()
-			self, err := os.Executable()
-			if err != nil {
-				fmt.Println("FAILED restart: ", err)
-			}
-			syscall.Exec(self, os.Args, os.Environ())
+			RestartServer(c)
 			return false
 		}
 	}
 }
 
+func RestartServer(c *client.Client) {
+	c.Stop()
+	self, err := os.Executable()
+	if err != nil {
+		fmt.Println("FAILED restart: ", err)
+	}
+	syscall.Exec(self, []string{settings.StringFlags()}, os.Environ())
+}
+
 func StartServer() {
 	if settings.Debug {
-		fmt.Println(ServerStatus, StatusList[ServerStatus.status])
+		fmt.Println(ServerStatus, StatusList[ServerStatus.Status])
 	} else {
-		fmt.Println("Run :"+settings.Port, time.Now().Format("2006-01-02 15:04:05.0-07"))
+		fmt.Println("#"+settings.StringFlags()+"\nRun"+ServerStatus.Room+" :"+settings.Port+settings.Path, time.Now().Format("2006-01-02 15:04:05.0-07"))
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -81,17 +87,23 @@ func StartPop(room string, t Watcher) Watcher {
 	t.Stop()
 	return StartWatcher(time.Minute, func() {
 		s := CorsAccess("https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET")
-		js := gjson.Get(s, "data.room_info.online")
-		updatePop(int(js.Int()))
+		js := gjson.Get(s, "data.room_info.live_status")
+		if js.Int() > 0 {
+			js = gjson.Get(s, "data.room_info.online")
+			updatePop(int(js.Int()))
+		} else {
+			updatePop(1)
+		}
 	})
 }
 
 func ExiprePurse() {
-	for _, v := range Rooms {
-		if time.Now().Sub(v.PurseExpire) > 2*24*time.Hour {
+	Rooms.RWMutex.Lock()
+	for _, v := range Rooms.Value {
+		if v.PurseExpire.Sub(time.Now()) < 0 {
 			v.Purse = 0
 		}
-		var sc []ScStruct
+		var sc []Superchat
 		for _, j := range v.Superchat {
 			if j.Expire.Sub(time.Now()) > 0 {
 				sc = append(sc, j)
@@ -99,4 +111,5 @@ func ExiprePurse() {
 		}
 		v.Superchat = sc
 	}
+	Rooms.RWMutex.Unlock()
 }

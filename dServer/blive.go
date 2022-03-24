@@ -27,7 +27,7 @@ func StartBlive(room string, f func(c *client.Client)) *client.Client {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("started: " + room)
+	fmt.Println("[started: " + room + "]")
 	return c
 }
 
@@ -69,24 +69,28 @@ func addDanmu(s string) {
 	History = append(History, s)
 	if len(History) > 2e4 {
 		History = History[2000:]
-		ServerStatus.i -= 2000
-		if ServerStatus.i < 0 {
-			ServerStatus.i = 0
+		ServerStatus.Index -= 2000
+		if ServerStatus.Index < 0 {
+			ServerStatus.Index = 0
 		}
 	}
-	ServerStatus.waitDanmu.Stop()
+	ServerStatus.WaitDanmu.Stop()
 }
 
 func addPurse(price int) {
-	Rooms[ServerStatus.room].Purse += price
-	Rooms[ServerStatus.room].PurseExpire = time.Now()
+	Rooms.RWMutex.Lock()
+	Rooms.Value[ServerStatus.Room].Purse += price
+	Rooms.Value[ServerStatus.Room].PurseExpire = time.Now().Add(2 * 24 * time.Hour)
+	Rooms.RWMutex.Unlock()
 }
 
 func addSuperChat(content string, price int) {
 	addPurse(price)
-	Rooms[ServerStatus.room].Superchat = append(Rooms[ServerStatus.room].Superchat, ScStruct{
+	Rooms.RWMutex.Lock()
+	Rooms.Value[ServerStatus.Room].Superchat = append(Rooms.Value[ServerStatus.Room].Superchat, Superchat{
 		Price:   price,
 		Content: content, //30, 2 50, 5 100, 10
 		Expire:  time.Now().Add(time.Minute * time.Duration(price/10)),
 	})
+	Rooms.RWMutex.Unlock()
 }

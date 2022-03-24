@@ -67,29 +67,30 @@ func RunShell(s string, timeout int, isHTML bool) string {
 }
 
 func updatePop(pop int) {
-	ServerStatus.pop = pop
-	ServerStatus.isPopUnread = true
+	ServerStatus.Pop = pop
+	ServerStatus.IsPopUnread = true
 }
 
 func GetServerStatus() gin.H {
 	return gin.H{
-		"room":           ServerStatus.room,
-		"other_room":     ServerStatus.other_room,
-		"pop":            ServerStatus.pop,
-		"unread":         len(History) - ServerStatus.i,
-		"status":         ServerStatus.status,
-		"status_content": StatusList[ServerStatus.status],
+		"room":           ServerStatus.Room,
+		"other_room":     ServerStatus.Other_room,
+		"pop":            ServerStatus.Pop,
+		"purse":          Rooms.Value[ServerStatus.Room].Purse,
+		"que_size":       len(History) - ServerStatus.Index,
+		"status":         ServerStatus.Status,
+		"status_content": StatusList[ServerStatus.Status],
 	}
 }
 
 func ChangeRoom(room string) string {
 	room_id, _ := strconv.Atoi(room)
 	if room_id > 0 && room_id < 1e15 {
-		if ServerStatus.other_room != "" || ServerStatus.room != room {
-			fmt.Println("[kill:" + ServerStatus.room + "]")
-			ServerStatus.room = room
-			ServerStatus.pop = 0
-			ServerStatus.other_room = ""
+		if ServerStatus.Other_room != "" || ServerStatus.Room != room {
+			fmt.Println("[kill:" + ServerStatus.Room + "]")
+			ServerStatus.Room = room
+			ServerStatus.Pop = 0
+			ServerStatus.Other_room = ""
 			control <- ControlStruct{
 				cmd:  CMD_CHANGE_ROOM,
 				room: room,
@@ -97,7 +98,6 @@ func ChangeRoom(room string) string {
 		} else {
 			fmt.Println("[recv:butSame]")
 		}
-		fmt.Println("3")
 		return "[RECV] Room<b>" + room + "</b>"
 	} else if room_id == 0 {
 		return "[RECV] Room Keeps"
@@ -124,21 +124,21 @@ func GetDanmu(c *gin.Context) {
 		return
 	}
 	res := ""
-	if ServerStatus.i >= len(History) {
-		ServerStatus.waitDanmu = GetWatcher()
+	if ServerStatus.Index >= len(History) {
+		ServerStatus.WaitDanmu = GetWatcher()
 		select {
-		case <-ServerStatus.waitDanmu.Done:
+		case <-ServerStatus.WaitDanmu.Done:
 		case <-time.After(time.Second * 15):
 		}
-		ServerStatus.waitDanmu.IsRunning = false
+		ServerStatus.WaitDanmu.IsRunning = false
 	}
-	i := ServerStatus.i
+	i := ServerStatus.Index
 	if i < len(History) {
 		res = strings.Join(History[i:], "<br>")
-		ServerStatus.i = len(History)
+		ServerStatus.Index = len(History)
 	}
-	if ServerStatus.isPopUnread {
-		ServerStatus.isPopUnread = false
+	if ServerStatus.IsPopUnread {
+		ServerStatus.IsPopUnread = false
 		js, _ := json.Marshal(GetServerStatus())
 		res += "<br><!--" + string(js) + "-->"
 	}
@@ -162,14 +162,15 @@ func GetFavicon(c *gin.Context) {
 }
 
 func RecordClient(c *gin.Context) {
+	ServerStatus.Clients.RWMutex.Lock()
 	ua := c.Request.UserAgent()
 	path := c.Request.RequestURI
-	if v, ok := ServerStatus.clients[ua]; ok {
+	if v, ok := ServerStatus.Clients.Value[ua]; ok {
 		last, _ := time.Parse("2006-01-02T15:04:05MST", v.Last+time.Now().Format("MST"))
 		v.Interval = int(time.Now().Sub(last) / time.Second)
 		v.Reads++
 	} else {
-		ServerStatus.clients[ua] = &ClientsStruct{
+		ServerStatus.Clients.Value[ua] = &Clients{
 			First:    time.Now().Format("2006-01-02T15:04:05"),
 			Interval: 0,
 			Path:     []string{},
@@ -178,18 +179,20 @@ func RecordClient(c *gin.Context) {
 		}
 	}
 
-	ServerStatus.clients[ua].Last = time.Now().Format("2006-01-02T15:04:05")
-	paths := ServerStatus.clients[ua].Path
+	ServerStatus.Clients.Value[ua].Last = time.Now().Format("2006-01-02T15:04:05")
+	paths := ServerStatus.Clients.Value[ua].Path
 	if len(paths) >= 4 {
 		paths = paths[len(paths)-4:]
 	}
-	ServerStatus.clients[ua].Path = append(paths, path)
+	ServerStatus.Clients.Value[ua].Path = append(paths, path)
+	ServerStatus.Clients.RWMutex.Unlock()
 }
 
 func SetKick(c *gin.Context) {
+	ServerStatus.Clients.RWMutex.Lock()
 	ua := c.Request.UserAgent()
-	if _, ok := ServerStatus.clients[ua]; ok {
-		for i, j := range ServerStatus.clients {
+	if _, ok := ServerStatus.Clients.Value[ua]; ok {
+		for i, j := range ServerStatus.Clients.Value {
 			if i == ua {
 				j.Kick = ""
 			} else {
@@ -197,15 +200,18 @@ func SetKick(c *gin.Context) {
 			}
 		}
 	}
+	ServerStatus.Clients.RWMutex.Unlock()
 }
 
-func CheckKick(c *gin.Context) bool {
-	if k, ok := ServerStatus.clients[c.Request.UserAgent()]; ok && k.Kick != "" {
+func CheckKick(c *gin.Context) (kick bool) {
+	ServerStatus.Clients.RWMutex.Lock()
+	if k, ok := ServerStatus.Clients.Value[c.Request.UserAgent()]; ok && k.Kick != "" {
 		expire, _ := time.Parse("2006-01-02T15:04:05", k.Kick)
 		k.Kick = ""
 		if time.Now().Sub(expire) < 120*time.Second {
-			return true
+			kick = true
 		}
 	}
+	ServerStatus.Clients.RWMutex.Unlock()
 	return false
 }
