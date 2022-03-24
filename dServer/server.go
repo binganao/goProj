@@ -7,13 +7,16 @@ import (
 	"syscall"
 	"time"
 
-	//grmon "github.com/bcicen/grmon/agent"
+	grmon "github.com/bcicen/grmon/agent"
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
+	"github.com/wmillers/blivedm-go/client"
 )
 
 func Start() {
-	//grmon.Start()
+	if settings.Debug {
+		grmon.Start()
+	}
 	ServerStatus.room = settings.Room
 	Rooms = make(map[string]*Roomstatus)
 	StartServer()
@@ -25,33 +28,33 @@ func Start() {
 		}
 		ExiprePurse()
 
-		c := StartBlive(ServerStatus.room, HTML)
 		t = StartPop(ServerStatus.room, t)
 
-		if GetControl() {
+		if GetControl(StartBlive(ServerStatus.room, HTML)) {
 			// fork from original blivedm repo
 			// changes to Danmuku struct, Stop, Log.Fatal
-			c.Stop()
 			continue
+		} else {
+			break
 		}
-		<-time.After(time.Millisecond * 50)
 	}
+	fmt.Println("[QUIT]")
 }
 
-func GetControl() bool {
+func GetControl(c *client.Client) bool {
 	for {
 		state := <-control
 		switch state.cmd {
 		case CMD_CHANGE_ROOM:
 			ServerStatus.room = state.room
+			c.Stop()
 			return true
 		case CMD_UPGRADE:
 			//upgrade
 			//return false
 			fallthrough
 		case CMD_RESTART:
-			//restart
-			<-time.After(time.Millisecond * 100)
+			c.Stop()
 			self, err := os.Executable()
 			if err != nil {
 				fmt.Println("FAILED restart: ", err)
@@ -66,7 +69,7 @@ func StartServer() {
 	if settings.Debug {
 		fmt.Println(ServerStatus, StatusList[ServerStatus.status])
 	} else {
-		fmt.Println("Run :" + settings.Port)
+		fmt.Println("Run :"+settings.Port, time.Now().Format("2006-01-02 15:04:05.0-07"))
 		gin.SetMode(gin.ReleaseMode)
 	}
 

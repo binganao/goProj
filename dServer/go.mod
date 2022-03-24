@@ -3,6 +3,7 @@ module dServer
 go 1.18
 
 require (
+	github.com/bcicen/grmon v0.0.0-20211013120613-63facda35286
 	github.com/gin-gonic/gin v1.7.7
 	github.com/tidwall/gjson v1.13.0
 	github.com/wmillers/blivedm-go v0.0.6
@@ -24,7 +25,6 @@ require (
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect

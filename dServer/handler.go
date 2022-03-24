@@ -5,6 +5,7 @@ import (
 	"dServer/settings"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
@@ -44,7 +45,7 @@ func CorsAccess(url string, data string, method string, ori_headers ...map[strin
 	}
 }
 
-func RunShell(s string, timeout int) string {
+func RunShell(s string, timeout int, isHTML bool) string {
 	ctx := context.Background()
 	if timeout > 0 {
 		var cancel context.CancelFunc
@@ -54,13 +55,15 @@ func RunShell(s string, timeout int) string {
 
 	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", s)
 
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	res := string(out)
 	if res == "" {
-		return err.Error()
-	} else {
-		return res
+		res = err.Error()
 	}
+	if isHTML {
+		res = "<title>" + html.EscapeString(s) + "</title>\r<script src=\"https://cdn.jsdelivr.net/gh/drudru/ansi_up/ansi_up.min.js\">\r</script><script>window.onload=function(){\rvar a=document.body;\ra.innerHTML=new AnsiUp().ansi_to_html(a.innerText)}\r</script><body style=\"background:#222;\rwhite-space:pre-wrap;word-break:break-word;\rfont-family:monospace;color:#ccc\">\r" + html.EscapeString(res) + "</body>\r"
+	}
+	return res
 }
 
 func updatePop(pop int) {
@@ -117,7 +120,7 @@ func Reverse(original []string) []string {
 
 func GetDanmu(c *gin.Context) {
 	if CheckKick(c) {
-		HTMLString(c, "[JS]danmuOff('KICKED')")
+		HTMLString(c, `[JS]danmuOff("KICKED")`)
 		return
 	}
 	res := ""

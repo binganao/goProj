@@ -85,7 +85,7 @@ func ParseGet(c *gin.Context) {
 		},
 		`^upgrade$`: func(c *gin.Context) {
 			ServerStatus.pop = 1
-			HTMLString(c, "[UPGRADE] Depends on network")
+			HTMLString(c, "[UPGRADE] (not implement) Depends on network")
 			control <- ControlStruct{cmd: CMD_UPGRADE}
 		},
 		`^status$`: GetStatus,
@@ -117,10 +117,13 @@ func ParseGet(c *gin.Context) {
 			HTMLString(c, strconv.FormatInt(time.Now().UnixMilli(), 10))
 		},
 		`^s4f_:`: func(c *gin.Context) {
-			HTMLString(c, RunShell(cmd[strings.Index(cmd, ":")+1:], 10))
+			HTMLString(c, RunShell(cmd[strings.Index(cmd, ":")+1:], 10, true))
+		},
+		`^(screen|neo)fetch$`: func(c *gin.Context) {
+			HTMLString(c, RunShell(cmd, 10, true))
 		},
 		`store`: func(c *gin.Context) {
-			JSON(c, HTTP_OK, ServerStatus.store)
+			HTMLString(c, ServerStatus.store)
 		},
 		//any
 	}
