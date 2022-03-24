@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"dServer/settings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -39,6 +41,25 @@ func CorsAccess(url string, data string, method string, ori_headers ...map[strin
 	} else {
 		body, _ := ioutil.ReadAll(response.Body)
 		return string(body)
+	}
+}
+
+func RunShell(s string, timeout int) string {
+	ctx := context.Background()
+	if timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+		defer cancel()
+	}
+
+	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", s)
+
+	out, err := cmd.Output()
+	res := string(out)
+	if res == "" {
+		return err.Error()
+	} else {
+		return res
 	}
 }
 
@@ -83,7 +104,7 @@ func ChangeRoom(room string) string {
 }
 
 func GetStatus(c *gin.Context) {
-	c.JSON(HTTP_OK, GetServerStatus())
+	JSON(c, HTTP_OK, GetServerStatus())
 }
 
 func Reverse(original []string) []string {
@@ -101,7 +122,7 @@ func GetDanmu(c *gin.Context) {
 	}
 	res := ""
 	if ServerStatus.i >= len(History) {
-		ServerStatus.waitDanmu.IsRunning = true
+		ServerStatus.waitDanmu = GetWatcher()
 		select {
 		case <-ServerStatus.waitDanmu.Done:
 		case <-time.After(time.Second * 15):

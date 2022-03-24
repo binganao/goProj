@@ -3,9 +3,12 @@ package main
 import (
 	"dServer/settings"
 	"fmt"
+	"os"
+	"syscall"
 	"time"
 
 	//grmon "github.com/bcicen/grmon/agent"
+	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 )
 
@@ -42,19 +45,30 @@ func GetControl() bool {
 		case CMD_CHANGE_ROOM:
 			ServerStatus.room = state.room
 			return true
+		case CMD_UPGRADE:
+			//upgrade
+			//return false
+			fallthrough
 		case CMD_RESTART:
 			//restart
 			<-time.After(time.Millisecond * 100)
-			return false
-		case CMD_UPGRADE:
-			//upgrade
+			self, err := os.Executable()
+			if err != nil {
+				fmt.Println("FAILED restart: ", err)
+			}
+			syscall.Exec(self, os.Args, os.Environ())
 			return false
 		}
 	}
 }
 
 func StartServer() {
-	fmt.Println(ServerStatus, StatusList[ServerStatus.status])
+	if settings.Debug {
+		fmt.Println(ServerStatus, StatusList[ServerStatus.status])
+	} else {
+		fmt.Println("Run :" + settings.Port)
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	r := InitRouters()
 	go r.Run(":" + settings.Port)
@@ -62,7 +76,8 @@ func StartServer() {
 
 func StartPop(room string, t Watcher) Watcher {
 	t.Stop()
-	return StartUrlWatcher(time.Minute, "https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET", func(s string) {
+	return StartWatcher(time.Minute, func() {
+		s := CorsAccess("https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET")
 		js := gjson.Get(s, "data.room_info.online")
 		updatePop(int(js.Int()))
 	})

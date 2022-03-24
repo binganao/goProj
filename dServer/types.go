@@ -19,12 +19,12 @@ var History []string
 var Rooms map[string]*Roomstatus
 
 type ClientsStruct struct {
-	First    string
-	Interval int
-	Last     string
-	Path     []string
-	Reads    int
-	Kick     string
+	First    string   `json:"first"`
+	Interval int      `json:"interval"`
+	Last     string   `json:"last"`
+	Path     []string `json:"path"`
+	Reads    int      `json:"reads"`
+	Kick     string   `json:"kick"`
 	//platform string
 	//browser  string
 }
@@ -64,6 +64,5 @@ func init() {
 		"[UPGRADE] it depends on network",
 	}
 	ServerStatus.clients = make(map[string]*ClientsStruct)
-	ServerStatus.waitDanmu = Watcher{Done: make(chan bool)}
 	control = make(chan ControlStruct)
 }

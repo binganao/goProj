@@ -10,30 +10,34 @@ type Watcher struct {
 	Done      chan bool
 }
 
-func StartUrlWatcher(t time.Duration, url string, data string, method string, f func(string)) Watcher {
-	c := Watcher{
+func GetWatcher() Watcher {
+	return Watcher{
 		IsRunning: true,
 		Done:      make(chan bool),
-	}
-	go c.run(t, url, data, method, f)
-	return c
-}
-
-func (c *Watcher) run(t time.Duration, url string, data string, method string, f func(string)) {
-	for {
-		select {
-		case <-c.Done:
-			return
-		case <-time.After(t):
-			go cover(func() { f(CorsAccess(url, data, method)) })
-		}
 	}
 }
 
 func (c *Watcher) Stop() {
 	if c.IsRunning {
 		c.IsRunning = false
-		c.Done <- true
+		close(c.Done)
+	}
+}
+
+func StartWatcher(t time.Duration, f func()) Watcher {
+	c := GetWatcher()
+	go runUrl(c, t, f)
+	return c
+}
+
+func runUrl(c Watcher, t time.Duration, f func()) {
+	for {
+		select {
+		case <-c.Done:
+			return
+		case <-time.After(t):
+			go cover(f)
+		}
 	}
 }
 

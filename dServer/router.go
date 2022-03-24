@@ -12,7 +12,7 @@ func InitRouters() *gin.Engine {
 	r.GET("/", ParseGet)
 	r.POST("/", ParsePost)
 	r.PUT("/", ParsePut)
-	r.GET("/favicon.ico", GetFavicon)
+	//r.GET("/favicon.ico", GetFavicon)
 
 	r.GET("/test", func(ctx *gin.Context) {
 		addPurse(1000)

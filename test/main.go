@@ -5,49 +5,31 @@ import (
 	"time"
 )
 
-type Watcher struct {
-	IsRunning bool
-	Done      chan bool
-}
-
-func StartUrlWatcher(t time.Duration, w ...Watcher) (c Watcher) {
-	if len(w) != 0 {
-		c = w[0]
-	} else {
-		c = Watcher{
-			IsRunning: true,
-			Done:      make(chan bool),
-		}
-	}
-	go c.run(t)
-	return c
-}
-
-func (c *Watcher) run(t time.Duration) {
-	for {
-		fmt.Println(c.IsRunning)
-		select {
-		case <-c.Done:
-			//	c.IsRunning = false
-			break
-		case <-time.After(t):
-			fmt.Println(123)
-		}
-	}
-	fmt.Println(c.IsRunning)
-}
-
-func (c *Watcher) Stop() {
-	fmt.Println(c.IsRunning)
-	if c.IsRunning {
-		c.IsRunning = false
-		c.Done <- true
-	}
-}
+var ch chan struct{}
 
 func main() {
-	c := StartUrlWatcher(time.Second)
+	ch = make(chan struct{})
+
+	go func() {
+		select {
+		case <-ch:
+			fmt.Println("123")
+		case <-time.After(time.Minute):
+			fmt.Println("TIMEOUT1")
+		}
+	}()
+	go func() {
+		select {
+		case <-ch:
+			fmt.Println("456")
+		case <-time.After(time.Minute):
+			fmt.Println("TIMEOUT2")
+		}
+	}()
 	<-time.After(time.Second * 2)
-	c.Stop()
+	close(ch)
+	//ch <- struct{}{}
+	a, ok := <-ch
+	fmt.Println(a, ok)
 	<-time.After(time.Hour)
 }
