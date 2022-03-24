@@ -143,6 +143,9 @@ func ParsePost(c *gin.Context) {
 		`^store$`: func(c *gin.Context) {
 			s, _ := c.GetRawData()
 			ServerStatus.Store = string(s)
+			JSON(c, HTTP_OK, gin.H{
+				"store": "done",
+			})
 		},
 		`^cors:`: func(c *gin.Context) {
 			s, _ := c.GetRawData()

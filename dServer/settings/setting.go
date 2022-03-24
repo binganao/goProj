@@ -2,8 +2,6 @@ package settings
 
 import (
 	"flag"
-	"fmt"
-	"os"
 )
 
 var (
@@ -22,9 +20,4 @@ func ReadFlags() {
 	flag.StringVar(&Room, "room", "545068", "number")
 	flag.StringVar(&Store, "store", "", "string stored in /?store")
 	flag.IntVar(&Timeout, "timeout", 5, "")
-}
-
-func StringFlags() string {
-	return fmt.Sprintf(`%s -path "%v" -port %v -debug=%v -room %v -store "%v" -timeout %v`,
-		os.Args[0], Path, Port, Debug, Room, Store, Timeout)
 }

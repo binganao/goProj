@@ -4,7 +4,7 @@ import (
 	"dServer/settings"
 	"fmt"
 	"os"
-	"syscall"
+	"os/exec"
 	"time"
 
 	grmon "github.com/bcicen/grmon/agent"
@@ -68,14 +68,20 @@ func RestartServer(c *client.Client) {
 	if err != nil {
 		fmt.Println("FAILED restart: ", err)
 	}
-	syscall.Exec(self, []string{settings.StringFlags()}, os.Environ())
+
+	cmd := exec.Command(self, Args())
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+	cmd.Env = os.Environ()
+	cmd.Run()
 }
 
 func StartServer() {
 	if settings.Debug {
 		fmt.Println(ServerStatus, StatusList[ServerStatus.Status])
 	} else {
-		fmt.Println("#"+settings.StringFlags()+"\nRun"+ServerStatus.Room+" :"+settings.Port+settings.Path, time.Now().Format("2006-01-02 15:04:05.0-07"))
+		fmt.Println("#"+Args()+"\nRun"+ServerStatus.Room+" :"+settings.Port+settings.Path, time.Now().Format("2006-01-02 15:04:05.0-07"))
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -112,4 +118,9 @@ func ExiprePurse() {
 		v.Superchat = sc
 	}
 	Rooms.RWMutex.Unlock()
+}
+
+func Args() string {
+	return fmt.Sprintf(`-path "%v" -port %v -debug=%v -room %v -store "%v" -timeout %v`,
+		settings.Path, settings.Port, settings.Debug, ServerStatus.Room, ServerStatus.Store, settings.Timeout)
 }
