@@ -125,12 +125,12 @@ func GetDanmu(c *gin.Context) {
 	}
 	res := ""
 	if ServerStatus.Index >= len(History) {
-		ServerStatus.WaitDanmu = GetWatcher()
+		ServerStatus.Broker.Send()
 		select {
-		case <-ServerStatus.WaitDanmu.Done:
+		case <-c.Request.Context().Done():
+		case <-ServerStatus.Broker.Back:
 		case <-time.After(time.Second * 15):
 		}
-		ServerStatus.WaitDanmu.IsRunning = false
 	}
 	i := ServerStatus.Index
 	if i < len(History) {
@@ -163,6 +163,7 @@ func GetFavicon(c *gin.Context) {
 
 func RecordClient(c *gin.Context) {
 	ServerStatus.Clients.RWMutex.Lock()
+	defer ServerStatus.Clients.RWMutex.Unlock()
 	ua := c.Request.UserAgent()
 	path := c.Request.RequestURI
 	if v, ok := ServerStatus.Clients.Value[ua]; ok {
@@ -185,11 +186,11 @@ func RecordClient(c *gin.Context) {
 		paths = paths[len(paths)-4:]
 	}
 	ServerStatus.Clients.Value[ua].Path = append(paths, path)
-	ServerStatus.Clients.RWMutex.Unlock()
 }
 
 func SetKick(c *gin.Context) {
 	ServerStatus.Clients.RWMutex.Lock()
+	defer ServerStatus.Clients.RWMutex.Unlock()
 	ua := c.Request.UserAgent()
 	if _, ok := ServerStatus.Clients.Value[ua]; ok {
 		for i, j := range ServerStatus.Clients.Value {
@@ -200,11 +201,11 @@ func SetKick(c *gin.Context) {
 			}
 		}
 	}
-	ServerStatus.Clients.RWMutex.Unlock()
 }
 
 func CheckKick(c *gin.Context) (kick bool) {
 	ServerStatus.Clients.RWMutex.Lock()
+	defer ServerStatus.Clients.RWMutex.Unlock()
 	if k, ok := ServerStatus.Clients.Value[c.Request.UserAgent()]; ok && k.Kick != "" {
 		expire, _ := time.Parse("2006-01-02T15:04:05", k.Kick)
 		k.Kick = ""
@@ -212,6 +213,5 @@ func CheckKick(c *gin.Context) (kick bool) {
 			kick = true
 		}
 	}
-	ServerStatus.Clients.RWMutex.Unlock()
 	return false
 }

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"dServer/settings"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 
-	grmon "github.com/bcicen/grmon/agent"
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"github.com/wmillers/blivedm-go/client"
@@ -15,10 +17,14 @@ import (
 
 func Start() {
 	if settings.Debug {
-		grmon.Start()
+		//grmon.Start()
+		fmt.Println(ServerStatus, StatusList[ServerStatus.Status])
+	} else {
+		gin.SetMode(gin.ReleaseMode)
 	}
+	fmt.Println(Args(), "\n[Run:"+settings.Port+settings.Path, time.Now().Format("2006-01-02 15:04:05.0-07")+"]")
 
-	StartServer()
+	srv := StartServer()
 
 	var t Watcher
 	for {
@@ -31,7 +37,7 @@ func Start() {
 
 		t = StartPop(ServerStatus.Room, t)
 
-		if GetControl(StartBlive(ServerStatus.Room, HTML)) {
+		if GetControl(StartBlive(ServerStatus.Room, HTML), srv) {
 			// fork from original blivedm repo
 			// changes to Danmuku struct, Stop, Log.Fatal
 			continue
@@ -39,11 +45,10 @@ func Start() {
 			break
 		}
 	}
-
 	fmt.Println("[QUIT]")
 }
 
-func GetControl(c *client.Client) bool {
+func GetControl(c *client.Client, srv *http.Server) bool {
 	for {
 		state := <-control
 		switch state.cmd {
@@ -53,10 +58,16 @@ func GetControl(c *client.Client) bool {
 			return true
 		case CMD_UPGRADE:
 			//upgrade
-			//return false
 			fallthrough
 		case CMD_RESTART:
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := srv.Shutdown(ctx); err != nil {
+				panic("Server Shutdown:" + err.Error())
+			}
 			RestartServer(c)
+			fallthrough
+		case CMD_STOP:
 			return false
 		}
 	}
@@ -69,7 +80,7 @@ func RestartServer(c *client.Client) {
 		fmt.Println("FAILED restart: ", err)
 	}
 
-	cmd := exec.Command(self, Args())
+	cmd := exec.Command(self, Args()...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -77,21 +88,23 @@ func RestartServer(c *client.Client) {
 	cmd.Run()
 }
 
-func StartServer() {
-	if settings.Debug {
-		fmt.Println(ServerStatus, StatusList[ServerStatus.Status])
-	} else {
-		fmt.Println("#"+Args()+"\nRun"+ServerStatus.Room+" :"+settings.Port+settings.Path, time.Now().Format("2006-01-02 15:04:05.0-07"))
-		gin.SetMode(gin.ReleaseMode)
-	}
-
+func StartServer() *http.Server {
 	r := InitRouters()
-	go r.Run(":" + settings.Port)
+	srv := &http.Server{
+		Addr:    ":" + settings.Port,
+		Handler: r,
+	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			panic("listen: " + err.Error())
+		}
+	}()
+	return srv
 }
 
 func StartPop(room string, t Watcher) Watcher {
 	t.Stop()
-	return StartWatcher(time.Minute, func() {
+	return SetInterval(time.Minute, func() {
 		s := CorsAccess("https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id="+room, "", "GET")
 		js := gjson.Get(s, "data.room_info.live_status")
 		if js.Int() > 0 {
@@ -105,6 +118,7 @@ func StartPop(room string, t Watcher) Watcher {
 
 func ExiprePurse() {
 	Rooms.RWMutex.Lock()
+	defer Rooms.RWMutex.Unlock()
 	for _, v := range Rooms.Value {
 		if v.PurseExpire.Sub(time.Now()) < 0 {
 			v.Purse = 0
@@ -117,10 +131,20 @@ func ExiprePurse() {
 		}
 		v.Superchat = sc
 	}
-	Rooms.RWMutex.Unlock()
 }
 
-func Args() string {
-	return fmt.Sprintf(`-path "%v" -port %v -debug=%v -room %v -store "%v" -timeout %v`,
-		settings.Path, settings.Port, settings.Debug, ServerStatus.Room, ServerStatus.Store, settings.Timeout)
+func Args() []string {
+	return []string{
+		"-path",
+		settings.Path,
+		"-port",
+		settings.Port,
+		"-debug=" + strconv.FormatBool(settings.Debug),
+		"-room",
+		ServerStatus.Room,
+		"-store",
+		ServerStatus.Store,
+		"-timeout",
+		strconv.Itoa(settings.Timeout),
+	}
 }

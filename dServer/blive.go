@@ -39,7 +39,7 @@ func HTML(c *client.Client) {
 			identity += "⚑"
 		}
 		identity += string(" ᴀʙᴄ"[msg.PrivilegeType]) + parseLevel(msg.UserLevel)
-		addDanmu(fmt.Sprintf(`<span style="font-size: .64em">%s%s</span>%s`, identity, html.EscapeString(msg.Uname), bigbold("<!---->"+html.EscapeString(msg.Msg))))
+		addDanmu(fmt.Sprintf(`<span style="font-size: .64em">%s%s</span>%s`, supbold(identity), html.EscapeString(msg.Uname), bigbold("<!---->"+html.EscapeString(msg.Msg))))
 	})
 	// 醒目留言事件
 	c.OnSuperChat(func(superChat *message.SuperChat) {
@@ -74,23 +74,23 @@ func addDanmu(s string) {
 			ServerStatus.Index = 0
 		}
 	}
-	ServerStatus.WaitDanmu.Stop()
+	ServerStatus.Broker.Reply()
 }
 
 func addPurse(price int) {
 	Rooms.RWMutex.Lock()
+	defer Rooms.RWMutex.Unlock()
 	Rooms.Value[ServerStatus.Room].Purse += price
 	Rooms.Value[ServerStatus.Room].PurseExpire = time.Now().Add(2 * 24 * time.Hour)
-	Rooms.RWMutex.Unlock()
 }
 
 func addSuperChat(content string, price int) {
 	addPurse(price)
 	Rooms.RWMutex.Lock()
+	defer Rooms.RWMutex.Unlock()
 	Rooms.Value[ServerStatus.Room].Superchat = append(Rooms.Value[ServerStatus.Room].Superchat, Superchat{
 		Price:   price,
 		Content: content, //30, 2 50, 5 100, 10
 		Expire:  time.Now().Add(time.Minute * time.Duration(price/10)),
 	})
-	Rooms.RWMutex.Unlock()
 }

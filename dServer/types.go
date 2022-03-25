@@ -50,7 +50,7 @@ var ServerStatus struct {
 	Status      int
 	Store       string
 	IsPopUnread bool
-	WaitDanmu   Watcher      `json:"-"`
+	Broker      Broker       `json:"-"`
 	Clients     ClientsMutex `json:"-"`
 }
 var StatusList []string
@@ -63,14 +63,14 @@ type ControlStruct struct {
 var control chan ControlStruct
 
 const (
-	CMD_CHANGE_ROOM = iota
+	ServerTimeout   int = 15
+	CMD_CHANGE_ROOM     = iota
 	CMD_RESTART
 	CMD_UPGRADE
+	CMD_STOP
 )
 
 func init() {
-	settings.ReadFlags()
-
 	StatusList = []string{
 		"",
 		"[SLEEP] no room (CAREFUL with s4f_: cmd)",
@@ -81,6 +81,7 @@ func init() {
 
 	ServerStatus.Room = settings.Room
 	ServerStatus.Store = settings.Store
+	ServerStatus.Broker = GetBroker()
 	ServerStatus.Clients = ClientsMutex{Value: make(map[string]*Clients)}
 
 	control = make(chan ControlStruct)

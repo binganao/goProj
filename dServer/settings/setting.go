@@ -20,4 +20,9 @@ func ReadFlags() {
 	flag.StringVar(&Room, "room", "545068", "number")
 	flag.StringVar(&Store, "store", "", "string stored in /?store")
 	flag.IntVar(&Timeout, "timeout", 5, "")
+	flag.Parse()
+}
+
+func init() {
+	ReadFlags()
 }
