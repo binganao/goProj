@@ -35,6 +35,7 @@ var (
 	ct                   int
 	retry                int
 	timeout              int
+	transitiontime       int
 	start                time.Time
 	client               *http.Client
 )
@@ -50,6 +51,7 @@ func init() {
 	flag.BoolVar(&isReg, "reg", false, "Get token (need to press the link button)")
 	flag.IntVar(&bri, "bri", 254, "Brightness < 255")
 	flag.IntVar(&ct, "ct", 180, "Color temperature 153-500")
+	flag.IntVar(&transitiontime, "trans", 0, "Transition time (.0s)")
 	flag.IntVar(&retry, "retry", 3, "Retry times")
 	flag.IntVar(&timeout, "timeout", 2, "Timeout for each connection")
 	flag.Parse()
@@ -118,9 +120,13 @@ func light(url string, on bool, bri, ct int) bool {
 	var jsonData = []byte(`{
 		"on": ` + strconv.FormatBool(on) + `,
 		"bri":` + strconv.Itoa(bri) + `,
-		"ct": ` + strconv.Itoa(ct) + `
+		"ct": ` + strconv.Itoa(ct) + `,
+		"transitiontime":` + strconv.Itoa(transitiontime) + `
 	}`)
 	log.Println("Switch:\t", on)
+	if isVerbose {
+		log.Println(string(jsonData))
+	}
 	request, _ := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	response, err := client.Do(request)
