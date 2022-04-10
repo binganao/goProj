@@ -128,6 +128,9 @@ func ParseGet(c *gin.Context) {
 		`^test$`: func(ctx *gin.Context) {
 			JSON(c, HTTP_OK, ServerStatus)
 		},
+		`^args$`: func(ctx *gin.Context) {
+			JSON(c, HTTP_OK, Args())
+		},
 		//any
 	}
 	ApplyMatch(c, statement, cmd)

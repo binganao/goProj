@@ -16,7 +16,7 @@ var (
 
 func ReadFlags() {
 	flag.StringVar(&Path, "path", "/blive", "base path")
-	flag.StringVar(&Ip, "ip", "", "(default 0.0.0.0)")
+	flag.StringVar(&Ip, "ip", "127.0.0.1", "")
 	flag.StringVar(&Port, "port", "8099", "")
 	flag.BoolVar(&Debug, "debug", false, "")
 	flag.StringVar(&Room, "room", "545068", "number")
