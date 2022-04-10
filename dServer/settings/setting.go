@@ -8,6 +8,7 @@ var (
 	Room    string
 	Debug   bool
 	Path    string
+	Ip      string
 	Port    string
 	Store   string
 	Timeout int
@@ -15,6 +16,7 @@ var (
 
 func ReadFlags() {
 	flag.StringVar(&Path, "path", "/blive", "base path")
+	flag.StringVar(&Ip, "ip", "", "(default 0.0.0.0)")
 	flag.StringVar(&Port, "port", "8099", "")
 	flag.BoolVar(&Debug, "debug", false, "")
 	flag.StringVar(&Room, "room", "545068", "number")

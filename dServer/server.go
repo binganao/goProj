@@ -91,7 +91,7 @@ func RestartServer(c *client.Client) {
 func StartServer() *http.Server {
 	r := InitRouters()
 	srv := &http.Server{
-		Addr:    ":" + settings.Port,
+		Addr:    settings.Ip + ":" + settings.Port,
 		Handler: r,
 	}
 	go func() {
