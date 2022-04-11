@@ -20,20 +20,24 @@ func WebGetCaptcha(c *gin.Context) {
 	response.Success("操作成功", data, c)
 }
 
-func WebUserLogin(c *gin.Context){
+func WebUserLogin(c *gin.Context) {
 	var param models.WebUserLoginParam
-	if err:=c.ShouldBind(&param);err!=nil{
+	if err := c.ShouldBind(&param); err != nil {
 		response.Failed("参数无效", c)
 		return
 	}
 
-	if !common.VerifyCaptcha(param.CaptchaId, param.CaptchaValue){
+	if !common.VerifyCaptcha(param.CaptchaId, param.CaptchaValue) {
 		response.Failed("验证码错误", c)
 		return
 	}
 
-	uid:=user.Login(param)
-	if uid>0{
-		token, _:=common.
+	uid := user.Login(param)
+	if uid > 0 {
+		token, _ := common.GenerateToken(param.Username)
+		userInfo := models.WebUserInfo{uid, token}
+		response.Success("登录成功", userInfo, c)
+		return
 	}
+	response.Failed("用户名或密码错误", c)
 }

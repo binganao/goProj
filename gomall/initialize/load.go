@@ -3,7 +3,8 @@ package initialize
 import (
 	"log"
 
-	"./global"
+	"mall/global"
+
 	"github.com/spf13/viper"
 )
 

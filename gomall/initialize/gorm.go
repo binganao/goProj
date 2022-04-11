@@ -5,7 +5,8 @@ import (
 	"log"
 	"time"
 
-	"./global"
+	"mall/global"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"

@@ -12,7 +12,7 @@ type Config struct {
 
 // 服务启动端口号配置
 type Server struct {
-	Post string `mapstructure:"post"`
+	Port string `mapstructure:"port"`
 }
 
 // MySQL数据源配置

@@ -1,7 +1,8 @@
 package initialize
 
 import (
-	"./global"
+	"mall/global"
+
 	"github.com/go-redis/redis/v8"
 )
 
