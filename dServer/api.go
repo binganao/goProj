@@ -129,7 +129,7 @@ func ParseGet(c *gin.Context) {
 			JSON(c, HTTP_OK, ServerStatus)
 		},
 		`^args$`: func(ctx *gin.Context) {
-			JSON(c, HTTP_OK, Args())
+			HTMLString(c, "'"+strings.Join(Args(), "' '")+"'")
 		},
 		//any
 	}
