@@ -35,7 +35,7 @@ func WebUserLogin(c *gin.Context) {
 	uid := user.Login(param)
 	if uid > 0 {
 		token, _ := common.GenerateToken(param.Username)
-		userInfo := models.WebUserInfo{uid, token}
+		userInfo := models.WebUserInfo{Uid: uid, Token: token}
 		response.Success("登录成功", userInfo, c)
 		return
 	}

@@ -1,2 +1,2 @@
-It's a go project.
+A go project.
 
