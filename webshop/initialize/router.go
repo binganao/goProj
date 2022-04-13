@@ -19,8 +19,11 @@ func Router() {
 	{
 		web.GET("/captcha", api.WebGetCaptcha)
 		web.POST("/login", api.WebUserLogin)
+
 		//TODO: JwtAuth
+
 		web.POST("/upload", api.WebFileUpload)
+
 		web.POST("/category/create", api.WebCreateCategory)
 		web.DELETE("/category/delete", api.WebDeleteCategory)
 		web.PUT("/category/update", api.WebUpdateCategory)

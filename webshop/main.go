@@ -1,6 +1,6 @@
 package main
 
-import "./initialize"
+import "mall/initialize"
 
 func main() {
 	initialize.LoadConfig()
