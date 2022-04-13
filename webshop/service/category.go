@@ -8,11 +8,11 @@ import (
 
 type WebCategoryService struct{}
 
-func (c *WebCategoryService) Create(param models.WebCategoryCreateParam) uint64 {
+func (c *WebCategoryService) Create(param models.WebCategoryCreateParam) int64 {
 	var category models.Category
 	result := global.Db.Where("name = ?", param.Name).First(&category)
 	if result.RowsAffected > 0 {
-		return category.Id
+		return int64(category.Id)
 	}
 	category = models.Category{
 		Name:     param.Name,
@@ -22,7 +22,7 @@ func (c *WebCategoryService) Create(param models.WebCategoryCreateParam) uint64 
 		Created:  common.NowTime(),
 	}
 	global.Db.Create(&category)
-	return category.Id
+	return int64(category.Id)
 }
 
 func (c *WebCategoryService) Delete(param models.WebCategoryDeleteParam) int64 {

@@ -4,6 +4,7 @@ import (
 	"log"
 	"mall/api"
 	"mall/global"
+	"mall/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,7 @@ func Router() {
 		web.GET("/captcha", api.WebGetCaptcha)
 		web.POST("/login", api.WebUserLogin)
 
-		//TODO: JwtAuth
+		web.Use(middleware.JwtAuth())
 
 		web.POST("/upload", api.WebFileUpload)
 
@@ -29,6 +30,13 @@ func Router() {
 		web.PUT("/category/update", api.WebUpdateCategory)
 		web.GET("/category/list", api.WebGetCategoryList)
 		web.GET("/category/option", api.WebGetCategoryOption)
+
+		web.POST("/product/create", api.WebCreateProduct)
+		web.DELETE("/product/delete", api.WebDeleteProduct)
+		web.PUT("/product/update", api.WebUpdateProduct)
+		web.PUT("/product/status/update", api.WebUpdateProductStatus)
+		web.GET("/product/info", api.WebGetProductInfo)
+		web.GET("/product/list", api.WebGetProductList)
 	}
 
 	//...
