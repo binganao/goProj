@@ -59,15 +59,3 @@ func WebGetProductList(c *gin.Context) {
 	productList, rows := webProduct.GetList(param)
 	response.SuccessPage("查询成功", productList, rows, c)
 }
-
-func act(param interface{}, do func() int64, name string, c *gin.Context) {
-	if err := c.ShouldBind(param); err != nil {
-		response.Failed("请求参数无效", c)
-		return
-	}
-	if count := do(); count > 0 {
-		response.Success(name+"成功", count, c)
-		return
-	}
-	response.Failed(name+"失败", c)
-}

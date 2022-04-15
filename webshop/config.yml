@@ -1,0 +1,23 @@
+# 启动端口号
+server:
+  port: 8000
+
+# MySQL数据源配置
+mysql:
+  username: root
+  password: 123456789
+  url: tcp(localhost:3306)/mall?charset=utf8&parseTime=True&loc=Local
+
+# 图片路径配置
+upload:
+  savePath: /tmp/resource/images/
+  accessUrl: http://localhost:8000/image/
+
+# JWT配置
+jwt:
+  signingKey: z3d6k8v0n3w7m9sa1fd0u09h
+
+# 微信小程序相关配置
+code2Session:
+  appId: wx8cs7c0b432128xf63
+  appSecret: ba07bab810x484a5fe1bc3s5026
