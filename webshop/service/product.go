@@ -1,11 +1,9 @@
 package service
 
 import (
-	"log"
 	"mall/common"
 	"mall/global"
 	"mall/models"
-	"strconv"
 )
 
 type WebProductService struct{}
@@ -34,27 +32,11 @@ func (p *WebProductService) Create(param models.WebProductCreateParam) int64 {
 		Created:           common.NowTime(),
 	}
 	rows := global.Db.Create(&product).RowsAffected
-	records := global.Db.First(&product, product.Id).RowsAffected
-	if records > 0 {
-		id := strconv.FormatUint(product.Id, 10)
-		result, err := global.Es.Index().Index("product").Id(id).BodyJson(product).Do(ctx)
-		if err != nil {
-			log.Println(err)
-		}
-		return result.PrimaryTerm
-	}
 	return rows
 }
 
 func (p *WebProductService) Delete(param models.WebProductDeleteParam) int64 {
 	rows := global.Db.Delete(&models.Product{}, param.Id).RowsAffected
-	if rows > 0 {
-		id := strconv.FormatUint(param.Id, 10)
-		_, err := global.Es.Delete().Index("product").Id(id).Do(ctx)
-		if err != nil {
-			log.Println(err)
-		}
-	}
 	return rows
 }
 
@@ -83,14 +65,6 @@ func (p *WebProductService) Update(param models.WebProductUpdateParam) int64 {
 		Updated:           common.NowTime(),
 	}
 	rows := global.Db.Model(&product).Updates(product).RowsAffected
-	records := global.Db.First(&product, product.Id).RowsAffected
-	if records > 0 {
-		id := strconv.FormatUint(param.Id, 10)
-		_, err := global.Es.Update().Index("product").Id(id).Doc(product).Do(ctx)
-		if err != nil {
-			log.Println(err.Error())
-		}
-	}
 	return rows
 }
 
@@ -100,14 +74,6 @@ func (p *WebProductService) UpdateStatus(param models.WebProductStatusUpdatePara
 		Status: param.Status,
 	}
 	rows := global.Db.Model(&product).Update("status", product.Status).RowsAffected
-	records := global.Db.First(&product, product.Id).RowsAffected
-	if records > 0 {
-		id := strconv.FormatUint(param.Id, 10)
-		_, err := global.Es.Update().Index("product").Id(id).Doc(product).Do(ctx)
-		if err != nil {
-			log.Println(err)
-		}
-	}
 	return rows
 }
 
