@@ -4,11 +4,8 @@ import (
 	"log"
 	"main/global"
 	"main/model"
-	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/olivere/elastic/v7"
 )
 
 func main() {
@@ -24,8 +21,6 @@ func main() {
 	var res float64
 	global.Db.Raw("select SUM(total_price) from `order` where created like ?", "2021-11-15%").Find(&res)
 	log.Println(res)
-	log.Println(elasticAdd("union pay test"))
-	elasticSearch("pay")
 }
 
 func test[T any](a T) {
@@ -61,17 +56,4 @@ func redisShow(userId string) (result model.AppCartInfo) {
 
 func redisKey(id string) string {
 	return strings.Join([]string{"user", id, "cart"}, ":")
-}
-
-func elasticAdd(title string) int64 {
-	result, _ := global.Es.Index().Index("product").Id("6").BodyJson(model.Product{Title: title}).Do(global.Ctx)
-	return result.PrimaryTerm
-}
-
-func elasticSearch(keyword string) {
-	phraseQuery := elastic.NewMatchPhraseQuery("title", keyword)
-	result, _ := global.Es.Search().Index("product").Query(phraseQuery).Do(global.Ctx)
-	for _, v := range result.Each(reflect.TypeOf(model.Product{})) {
-		log.Println(v)
-	}
 }
