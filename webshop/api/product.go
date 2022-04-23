@@ -38,7 +38,6 @@ func WebUpdateProductStatus(c *gin.Context) {
 	}, "更新", c)
 }
 
-// WebGetProductInfo 后台管理前端，获取商品信息
 func WebGetProductInfo(c *gin.Context) {
 	var param models.WebProductInfoParam
 	if err := c.ShouldBind(&param); err != nil {
@@ -49,7 +48,6 @@ func WebGetProductInfo(c *gin.Context) {
 	response.Success("查询成功", productInfo, c)
 }
 
-// WebGetProductList 后台管理前端，获取商品列表
 func WebGetProductList(c *gin.Context) {
 	var param models.WebProductListParam
 	if err := c.ShouldBind(&param); err != nil {

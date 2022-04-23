@@ -77,14 +77,12 @@ func (p *WebProductService) UpdateStatus(param models.WebProductStatusUpdatePara
 	return rows
 }
 
-// GetInfo 后台管理前端，获取商品信息
 func (p *WebProductService) GetInfo(param models.WebProductInfoParam) models.WebProductInfo {
 	var product models.WebProductInfo
 	global.Db.Table("product").First(&product, param.Id)
 	return product
 }
 
-// GetList 后台管理前端，获取商品列表
 func (p *WebProductService) GetList(param models.WebProductListParam) ([]models.WebProductList, int64) {
 	query := &models.Product{
 		Id:         param.Id,

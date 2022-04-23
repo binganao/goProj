@@ -29,7 +29,6 @@ func (c *WebCategoryService) Delete(param models.WebCategoryDeleteParam) int64 {
 	var pid2, pid3 models.Category
 	global.Db.Where("parent_id = ?", param.Id).First(&pid2)
 	global.Db.Where("parent_id = ?", pid3.Id).First(&pid3)
-	//TODO ???why
 	return global.Db.Delete(&models.Category{}, []uint64{param.Id, pid2.Id, pid3.Id}).RowsAffected
 }
 

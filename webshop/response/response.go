@@ -12,7 +12,6 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
-// PageResult 分页结果返回
 type PageResult struct {
 	Total int64       `json:"total"`
 	List  interface{} `json:"list"`

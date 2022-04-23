@@ -1,7 +1,6 @@
 package models
 
 //UNCHANGED
-// 数据库，商品数据映射模型
 type Product struct {
 	Id                uint64  `gorm:"primaryKey"         json:"id"`
 	CategoryId        uint64  `gorm:"category_id"        json:"categoryId"`
@@ -28,7 +27,6 @@ type Product struct {
 	Updated           string  `gorm:"updated"            json:"updated"`
 }
 
-// 后台管理前端，商品创建参数模型
 type WebProductCreateParam struct {
 	CategoryId        uint64  `json:"categoryId"         binding:"required,gt=0"`
 	Title             string  `json:"title"              binding:"required"`
@@ -51,12 +49,10 @@ type WebProductCreateParam struct {
 	Status            uint    `json:"status"             binding:"required,oneof=1 2"`
 }
 
-// 后台管理前端，商品删除参数模型
 type WebProductDeleteParam struct {
 	Id uint64 `form:"id" binding:"required,gt=0"`
 }
 
-// 后台管理前端，商品更新参数模型
 type WebProductUpdateParam struct {
 	Id                uint64  `json:"id"                 binding:"required,gt=0"`
 	CategoryId        uint64  `json:"categoryId"         binding:"required,gt=0"`
@@ -80,18 +76,15 @@ type WebProductUpdateParam struct {
 	Status            uint    `json:"status"             binding:"omitempty,oneof=1 2"`
 }
 
-// 后台管理前端，商品状态更新参数模型
 type WebProductStatusUpdateParam struct {
 	Id     uint64 `json:"id"     binding:"required,gt=0"`
 	Status uint   `json:"status" binding:"required,oneof=1 2"`
 }
 
-// 后台管理前端，商品信息查询参数模型
 type WebProductInfoParam struct {
 	Id uint64 `form:"id" binding:"required,gt=0"`
 }
 
-// 后台管理前端，商品列表查询参数模型
 type WebProductListParam struct {
 	Page       Page
 	Id         uint64 `form:"id"         binding:"omitempty,gt=0"`
@@ -100,7 +93,6 @@ type WebProductListParam struct {
 	Status     uint   `form:"status"     binding:"omitempty,oneof=1 2"`
 }
 
-// 后台管理前端，商品信息传输模型
 type WebProductInfo struct {
 	Id                uint64  `json:"id"`
 	CategoryId        uint64  `json:"categoryId"`
@@ -123,7 +115,6 @@ type WebProductInfo struct {
 	DetailImage       string  `json:"detailImage"`
 }
 
-// 后台管理前端，商品项传输模型
 type WebProductItem struct {
 	Id        uint64  `json:"id"`
 	Title     string  `json:"title"`
@@ -132,7 +123,6 @@ type WebProductItem struct {
 	MainImage string  `json:"mainImage"`
 }
 
-// 后台管理前端，商品列表传输模型
 type WebProductList struct {
 	Id        uint64  `json:"id"`
 	Title     string  `json:"title"`
