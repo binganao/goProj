@@ -4,7 +4,13 @@ server:
 mysql:
   username: root
   password: 123456789
-  url: tcp(localhost:3306)/mall?charset=utf8&parseTime=True&loc=Local
+  # Used in Docker
+  url: tcp(mysql:3306)/mall?charset=utf8&parseTime=True&loc=Local
+  # url: tcp(localhost:3306)/mall?charset=utf8&parseTime=True&loc=Local
+
+redis:
+  addr: redis:6379
+  # addr: localhost:6379
 
 upload:
   savePath: /tmp/resource/images/

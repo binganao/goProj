@@ -7,8 +7,13 @@ import (
 )
 
 func Redis() {
+	RetryModule(ConnectRedis, 0)
+}
+
+func ConnectRedis() {
+	m := global.Config.Redis
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     m.Addr,
 		Password: "",
 		DB:       0,
 	})

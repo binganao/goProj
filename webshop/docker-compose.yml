@@ -1,0 +1,28 @@
+version: '3'
+services:
+  go-shop:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+     - mysql
+     - redis
+     - nginx
+  redis:
+    image: redis
+    volumes: 
+      - ~/docker-store/redis:/data/
+    expose:
+      - 6379
+  mysql:
+    environment:
+      - MYSQL_DATABASE=mall
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    image: mysql
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d/
+      - ~/docker-store/mysql:/var/lib/mysql/
+    expose:
+      - 3306
+  nginx:
+    image: nginx

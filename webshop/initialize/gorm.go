@@ -2,7 +2,6 @@ package initialize
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"mall/global"
@@ -13,6 +12,10 @@ import (
 )
 
 func Mysql() {
+	RetryModule(ConnectMysql, 0)
+}
+
+func ConnectMysql() {
 	m := global.Config.Mysql
 	var dsn = fmt.Sprintf("%s:%s@%s", m.Username, m.Password, m.Url)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
@@ -21,11 +24,11 @@ func Mysql() {
 		},
 	})
 	if err != nil {
-		log.Panicln("mysql error", err)
+		panic(err)
 	}
 	sqlDb, err := db.DB()
 	if err != nil {
-		log.Panicln("mysql error", err)
+		panic(err)
 	}
 	sqlDb.SetMaxIdleConns(10)
 	sqlDb.SetMaxOpenConns(100)
