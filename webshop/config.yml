@@ -1,5 +1,6 @@
 server:
   port: 8000
+  ReleaseMode: true
 
 mysql:
   username: root

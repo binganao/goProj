@@ -12,8 +12,6 @@ import (
 func Router() {
 	engine := gin.Default()
 
-	//TODO: Cors
-
 	engine.Static("/image", global.Config.Upload.SavePath)
 
 	web := engine.Group("/web")
@@ -56,6 +54,11 @@ func Router() {
 	}
 
 	port := ":" + global.Config.Server.Port
+
+	if global.Config.Server.ReleaseMode {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	if err := engine.Run(port); err != nil {
 		log.Panicln("server start", err)
 	}

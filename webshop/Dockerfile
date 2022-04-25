@@ -1,4 +1,4 @@
-FROM golang:1.18 AS builder
+FROM golang:1.18-alpine AS builder
 
 WORKDIR /work
 
@@ -13,7 +13,8 @@ COPY . ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags '-s -w' -o go-shop main.go
 
-FROM debian:stable-slim
+# FROM debian:stable-slim
+FROM alpine
 WORKDIR /
 COPY --from=builder /work/go-shop .
 COPY config.yml ./

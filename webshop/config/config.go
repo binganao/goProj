@@ -9,7 +9,8 @@ type Config struct {
 }
 
 type Server struct {
-	Port string `mapstructure:"port"`
+	Port        string `mapstructure:"port"`
+	ReleaseMode bool   `mapstructure:"release_mode"`
 }
 
 type Mysql struct {
