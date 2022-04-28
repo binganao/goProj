@@ -1,30 +1,36 @@
-package main
+package service
 
 import (
 	"context"
+	"dServer/pb"
 	"dServer/settings"
-	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"github.com/wmillers/blivedm-go/client"
+	"google.golang.org/grpc"
 )
 
 func Start() {
 	if settings.Debug {
 		//grmon.Start()
-		fmt.Println(ServerStatus, StatusList[ServerStatus.Status])
+		log.Println(ServerStatus, StatusList[ServerStatus.Status])
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	fmt.Println(Args(), "\n[Run:"+settings.Port+settings.Path, time.Now().Format("2006-01-02 15:04:05.0-07")+"]")
+	log.Println(Args())
+	log.Println("[Run:"+settings.Port+settings.Path, time.Now().Format("2006-01-02 15:04:05.0-07")+"]")
 
 	srv := StartServer()
+	go StartgRPC()
 
 	var t Watcher
 	for {
@@ -45,7 +51,7 @@ func Start() {
 			break
 		}
 	}
-	fmt.Println("[QUIT]")
+	log.Println("[QUIT]")
 }
 
 func GetControl(c *client.Client, srv *http.Server) bool {
@@ -77,7 +83,7 @@ func RestartServer(c *client.Client) {
 	c.Stop()
 	self, err := os.Executable()
 	if err != nil {
-		fmt.Println("FAILED restart: ", err)
+		log.Println("FAILED restart: ", err)
 	}
 
 	cmd := exec.Command(self, Args()...)
@@ -146,5 +152,18 @@ func Args() []string {
 		ServerStatus.Store,
 		"-timeout",
 		strconv.Itoa(settings.Timeout),
+	}
+}
+
+func StartgRPC() {
+	listen, err := net.Listen("tcp", ":"+settings.GRPCPort)
+	if err != nil {
+		panic(err)
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterInfoServiceServer(grpcServer, &server{})
+	log.Println("[gRPC]", "listen on", settings.GRPCPort)
+	if err := grpcServer.Serve(listen); err != nil {
+		panic(err)
 	}
 }

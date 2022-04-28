@@ -1,8 +1,9 @@
-package main
+package service
 
 import (
-	"fmt"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Watcher chan struct{}
@@ -72,7 +73,7 @@ func (c *Broker) Reply() {
 func cover(f func()) {
 	defer func() {
 		if pan := recover(); pan != nil {
-			fmt.Printf("event error: %v\n", pan)
+			log.Printf("event error: %v\n", pan)
 		}
 	}()
 	f()

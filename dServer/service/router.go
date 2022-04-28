@@ -1,7 +1,9 @@
-package main
+package service
 
 import (
 	"dServer/settings"
+
+	"dServer/middleware"
 
 	"github.com/gin-contrib/pprof"
 
@@ -10,7 +12,7 @@ import (
 
 func InitRouters() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger())
+	r.Use(middleware.LogMiddleware())
 	r.Use(gin.Recovery())
 
 	if settings.Debug {

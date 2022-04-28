@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"regexp"
@@ -107,7 +107,7 @@ func ParseGet(c *gin.Context) {
 			}
 			js := cmd[strings.Index(cmd, ":")+1:]
 			addDanmu("[JS] " + js)
-			HTMLString(c, "[JS-EXCUTING] "+js)
+			HTMLString(c, "[JS-EXECUTING] "+js)
 		},
 		`^cors:`: func(c *gin.Context) {
 			s, _ := c.GetRawData()

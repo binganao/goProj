@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func CorsAccess(url string, data string, method string, ori_headers ...map[string][]string) string {
@@ -87,7 +88,7 @@ func ChangeRoom(room string) string {
 	room_id, _ := strconv.Atoi(room)
 	if room_id > 0 && room_id < 1e15 {
 		if ServerStatus.Other_room != "" || ServerStatus.Room != room {
-			fmt.Println("[kill:" + ServerStatus.Room + "]")
+			log.Println("[kill:" + ServerStatus.Room + "]")
 			ServerStatus.Room = room
 			ServerStatus.Pop = 0
 			ServerStatus.Other_room = ""
@@ -96,7 +97,7 @@ func ChangeRoom(room string) string {
 				room: room,
 			}
 		} else {
-			fmt.Println("[recv:butSame]")
+			log.Println("[recv:butSame]")
 		}
 		return "[RECV] Room<b>" + room + "</b>"
 	} else if room_id == 0 {

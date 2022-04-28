@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/wmillers/blivedm-go/client"
 	"github.com/wmillers/blivedm-go/message"
 )
@@ -25,9 +26,9 @@ func StartBlive(room string, f func(c *client.Client)) *client.Client {
 	// 启动
 	err := c.ConnectAndStart()
 	if err != nil {
-		fmt.Println(err)
+		log.Errorln(err)
 	}
-	fmt.Println("[started: " + room + "]")
+	log.Println("[started: " + room + "]")
 	return c
 }
 

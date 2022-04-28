@@ -1,5 +1,9 @@
 package main
 
+import (
+	"dServer/service"
+)
+
 /*
 cw.htm -> :8080 -> unreceived danmu / command
                           ^-ch- formatter <- blive <- bilibili
@@ -7,5 +11,5 @@ cw.htm -> :8080 -> unreceived danmu / command
 main -> server -> router -> api -> handler
 */
 func main() {
-	Start()
+	service.Start()
 }

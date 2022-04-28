@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package = "../pb";
+
+service InfoService {
+    rpc ChangeRoom(RoomId) returns (Resp) {}
+    rpc GetHistory(google.protobuf.Empty) returns (RespHistory) {}
+    rpc GetCmd(Cmd) returns (Resp) {}
+    rpc GetStatus(google.protobuf.Empty) returns (RespStatus) {}
+    rpc GetClients(google.protobuf.Empty) returns (RespClients) {}
+    rpc GetTest(google.protobuf.Empty) returns (RespTest) {}
+    rpc GetDanmu(google.protobuf.Empty) returns (stream RespDanmu) {}
+}
+
+message RoomId {
+    string room_id = 1;
+}
+
+message Cmd{
+    // restart, upgrade, kick, call, js, cors, time, s4f_, ?fetch, store, args
+    string cmd = 1;
+    string args = 2;
+}
+
+message Resp {
+    int32 code = 1;
+    string resp = 2;
+}
+
+message RespHistory {
+    int32 code = 1;
+    repeated string history = 2;
+}
+
+message RespStatus{
+    string room = 1;
+    string other_room = 2;
+    int32 pop = 3;
+    int32 purse = 4;
+    int32 que_size = 5;
+    int32 status = 6;
+    string status_content = 7;
+}
+
+message RespClients{
+    repeated ClientInfo clients = 1;
+}
+
+message ClientInfo {
+    string ua = 7;
+    string first = 1;
+    int32 interval = 2;
+    string last = 3;
+    repeated string path = 4;
+    int32 reads = 5;
+    string kick = 6;
+}
+
+message RespTest{
+    string test = 1;
+}
+
+message RespDanmu{
+    repeated string danmu = 1;
+}
